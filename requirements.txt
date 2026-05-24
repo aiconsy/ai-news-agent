@@ -1,0 +1,8 @@
+feedparser>=6.0
+trafilatura>=1.6
+readability-lxml>=0.4
+lxml[html_clean]>=5.0
+requests>=2.31
+edge-tts>=6.1
+pydub>=0.25
+python-dotenv>=1.0
