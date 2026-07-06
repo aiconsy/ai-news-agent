@@ -38,7 +38,7 @@ def send_text(text: str, chat_id: str | None = None, token: str | None = None) -
             payload = {
                 "chat_id": chat_id,
                 "text": chunk,
-                "parse_mode": "Markdown",
+                "parse_mode": "HTML",
             }
             resp = requests.post(url, json=payload, timeout=30)
             resp.raise_for_status()
