@@ -1,4 +1,8 @@
-"""Telegram delivery — send text and audio briefings."""
+"""Telegram delivery — send text and audio briefings.
+
+v5.2: Silent rule — if briefing is empty, no delivery. noteworthy_count
+parameter to track how many HIGH/MEDIUM articles were included.
+"""
 
 import json
 import logging
@@ -15,7 +19,7 @@ TELEGRAM_API = "https://api.telegram.org/bot{token}/{method}"
 
 def send_text(text: str, chat_id: str | None = None, token: str | None = None) -> bool:
     """Send a text message to Telegram. Handles long messages by splitting.
-    
+
     Returns True on success.
     """
     token = token or TELEGRAM_BOT_TOKEN
@@ -47,7 +51,7 @@ def send_text(text: str, chat_id: str | None = None, token: str | None = None) -
 
 def send_audio(audio_path: str, chat_id: str | None = None, token: str | None = None, caption: str = "") -> bool:
     """Send an OGG audio file as a Telegram voice message.
-    
+
     Returns True on success.
     """
     token = token or TELEGRAM_BOT_TOKEN
@@ -77,11 +81,37 @@ def send_audio(audio_path: str, chat_id: str | None = None, token: str | None = 
         return False
 
 
-def deliver_briefing(text: str, audio_path: str | None = None, caption: str = "📰 Hourly News Briefing") -> bool:
+def deliver_briefing(
+    text: str,
+    audio_path: str | None = None,
+    caption: str = "📰 Hourly News Briefing",
+    noteworthy_count: int = 0,
+) -> bool:
     """Deliver a complete briefing — text and optional audio — to Telegram.
-    
+
+    v5.2 Silent rule: if briefing is empty (no noteworthy articles),
+    skip delivery entirely — no spam.
+
+    Args:
+        text: The briefing text.
+        audio_path: Optional path to OGG audio file.
+        caption: Caption for the audio message.
+        noteworthy_count: Number of HIGH/MEDIUM articles in the briefing.
+            If 0, delivery is skipped (silent rule).
+
     Returns True if at least the text was sent successfully.
     """
+    # Silent rule: empty briefing → no delivery
+    if not text or not text.strip():
+        log.info("Briefing is empty — skipping delivery (silent rule)")
+        return False
+
+    if noteworthy_count == 0:
+        log.info("No noteworthy articles (HIGH/MEDIUM) — skipping delivery (silent rule)")
+        return False
+
+    log.info(f"Delivering briefing: {noteworthy_count} noteworthy articles")
+
     text_ok = send_text(text)
     audio_ok = False
 

@@ -1,1393 +1,238 @@
 {
   "feeds": [
-    {
-      "name": "ABC News",
-      "url": "https://www.abc.net.au/news/feed/46182/rss.xml",
-      "category": "World News"
-    },
-    {
-      "name": "ABC News: Top Stories",
-      "url": "https://feeds.abcnews.com/abcnews/topstories",
-      "category": "World News"
-    },
-    {
-      "name": "American Banker",
-      "url": "https://www.americanbanker.com/resources/technology.xml",
-      "category": "World News"
-    },
-    {
-      "name": "American Thinker",
-      "url": "https://feeds.feedburner.com/americanthinker",
-      "category": "World News"
-    },
-    {
-      "name": "Article | The Nation",
-      "url": "https://www.thenation.com/rss/articles",
-      "category": "World News"
-    },
-    {
-      "name": "Babylon Bee",
-      "url": "https://babylonbee.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "Breitbart News",
-      "url": "https://feeds.feedburner.com/breitbart",
-      "category": "World News"
-    },
-    {
-      "name": "Channel 4 News",
-      "url": "https://www.channel4.com/news/latest-news/rss",
-      "category": "World News"
-    },
-    {
-      "name": "Crooked Media",
-      "url": "https://crooked.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "Crooks and Liars",
-      "url": "https://feeds.feedburner.com/crooksandliars/YaCP",
-      "category": "World News"
-    },
-    {
-      "name": "DER SPIEGEL - International",
-      "url": "https://www.spiegel.de/international/index.rss",
-      "category": "World News"
-    },
-    {
-      "name": "Daily Express :: News Feed",
-      "url": "https://feeds.feedburner.com/daily-express-news-showbiz",
-      "category": "World News"
-    },
-    {
-      "name": "Daily Express :: UK Feed",
-      "url": "https://www.express.co.uk/posts/rss/1/uknews",
-      "category": "World News"
-    },
-    {
-      "name": "Democracy Now!",
-      "url": "https://www.democracynow.org/democracynow.rss",
-      "category": "World News"
-    },
-    {
-      "name": "Euro Weekly News",
-      "url": "https://www.euroweeklynews.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "FOX News International",
-      "url": "https://feeds.foxnews.com/foxnews/world",
-      "category": "World News"
-    },
-    {
-      "name": "FOX news",
-      "url": "https://feeds.foxnews.com/foxnews/latest",
-      "category": "World News"
-    },
-    {
-      "name": "FactCheck.org",
-      "url": "https://factcheck.org/feed/rss/",
-      "category": "World News"
-    },
-    {
-      "name": "Fark.com RSS",
-      "url": "https://www.fark.com/fark.rss",
-      "category": "World News"
-    },
-    {
-      "name": "Finovate",
-      "url": "https://feeds.feedburner.com/finovate",
-      "category": "World News"
-    },
-    {
-      "name": "France 24 - International breaking news, top stories and headlines",
-      "url": "https://www.france24.com/en/monde/rss",
-      "category": "World News"
-    },
-    {
-      "name": "Home - CBSNews.com",
-      "url": "https://www.cbsnews.com/feeds/rss/main.rss",
-      "category": "World News"
-    },
-    {
-      "name": "Home | Mail Online",
-      "url": "https://www.dailymail.co.uk/home/index.rss",
-      "category": "World News"
-    },
-    {
-      "name": "Hong Kong - South China Morning Post",
-      "url": "https://www.scmp.com/rss/hong_kong.xml",
-      "category": "World News"
-    },
-    {
-      "name": "India Latest News: Top National Headlines Today & Breaking News | The Hindu",
-      "url": "https://www.thehindu.com/news/national/?service=rss",
-      "category": "World News"
-    },
-    {
-      "name": "Insider Paper",
-      "url": "https://insiderpaper.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "Investinglive RSS Breaking news Feed",
-      "url": "https://www.forexlive.com/feed/news",
-      "category": "World News"
-    },
-    {
-      "name": "Just In News",
-      "url": "https://thehill.com/rss/syndicator/19110",
-      "category": "World News"
-    },
-    {
-      "name": "Just In News",
-      "url": "https://thehill.com/component/rss-syndicator/?feed_id=2",
-      "category": "World News"
-    },
-    {
-      "name": "Latest from MoneyWeek",
-      "url": "https://moneyweek.com/feed/all",
-      "category": "World News"
-    },
-    {
-      "name": "Latest news reports on FRANCE, French politics and culture - France 24",
-      "url": "https://www.france24.com/en/france/rss",
-      "category": "World News"
-    },
-    {
-      "name": "Lawyers, Guns & Money",
-      "url": "https://www.lawyersgunsmoneyblog.com/feed",
-      "category": "World News"
-    },
-    {
-      "name": "Morning Star",
-      "url": "https://www.morningstaronline.co.uk/rss.xml",
-      "category": "World News"
-    },
-    {
-      "name": "Mother Jones",
-      "url": "https://www.motherjones.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "NBC News World News",
-      "url": "https://feeds.nbcnews.com/feeds/worldnews",
-      "category": "World News"
-    },
-    {
-      "name": "NYT - Politics",
-      "url": "https://www.nytimes.com/services/xml/rss/nyt/Politics.xml",
-      "category": "World News"
-    },
-    {
-      "name": "NYT > Top Stories",
-      "url": "https://www.nytimes.com/services/xml/rss/nyt/HomePage.xml",
-      "category": "World News"
-    },
-    {
-      "name": "NYT > World News",
-      "url": "https://www.nytimes.com/services/xml/rss/nyt/World.xml",
-      "category": "World News"
-    },
-    {
-      "name": "New Scientist - Home",
-      "url": "https://feeds.newscientist.com/home",
-      "category": "World News"
-    },
-    {
-      "name": "News Archives | PYMNTS.com",
-      "url": "https://www.pymnts.com/news/rss",
-      "category": "World News"
-    },
-    {
-      "name": "News from California, across the nation and world - Los Angeles Times",
-      "url": "https://www.latimes.com/rss2.0.xml",
-      "category": "World News"
-    },
-    {
-      "name": "News from Europe - Latest world headlines and daily news - France 24",
-      "url": "https://www.france24.com/en/europe/rss",
-      "category": "World News"
-    },
-    {
-      "name": "News | Euronews RSS",
-      "url": "https://feeds.feedburner.com/euronews/en/home/",
-      "category": "World News"
-    },
-    {
-      "name": "News-Politics - Esquire",
-      "url": "https://www.esquire.com/blogs/politics/politics-rss/",
-      "category": "World News"
-    },
-    {
-      "name": "Nikkei Asian Review",
-      "url": "https://asia.nikkei.com/rss/feed/nar",
-      "category": "World News"
-    },
-    {
-      "name": "Noyes Payments Blog",
-      "url": "https://blog.starpointllp.com/blog/?feed=rss2",
-      "category": "World News"
-    },
-    {
-      "name": "PBS News Hour - Segments",
-      "url": "https://www.pbs.org/newshour/rss/podcast.xml",
-      "category": "World News"
-    },
-    {
-      "name": "PBS NewsHour - World",
-      "url": "https://www.pbs.org/newshour/feeds/rss/world",
-      "category": "World News"
-    },
-    {
-      "name": "PYMNTS | | PYMNTS.com",
-      "url": "https://www.pymnts.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "Page Array – World Tribune: U.S. Politics and Culture, Geostrategy, China, North Korea, Corporate Watch, Media Watch",
-      "url": "https://www.worldtribune.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "RT World News",
-      "url": "https://rt.com/rss/news/",
-      "category": "World News"
-    },
-    {
-      "name": "RealClearPolitics - Homepage",
-      "url": "https://www.realclearpolitics.com/index.xml",
-      "category": "World News"
-    },
-    {
-      "name": "Reveal",
-      "url": "https://feeds.revealradio.org/revealpodcast",
-      "category": "World News"
-    },
-    {
-      "name": "Right Wing Watch",
-      "url": "https://www.rightwingwatch.org/rss.xml",
-      "category": "World News"
-    },
-    {
-      "name": "Salon.com",
-      "url": "https://www.salon.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "Sputnik News - World News, Breaking News & Top Storie",
-      "url": "https://en.rian.ru/export/rss2/index.xml",
-      "category": "World News"
-    },
-    {
-      "name": "The Age - Latest News",
-      "url": "https://www.theage.com.au/rss/feed.xml",
-      "category": "World News"
-    },
-    {
-      "name": "The Atlantic",
-      "url": "https://feeds.feedburner.com/TheAtlantic",
-      "category": "World News"
-    },
-    {
-      "name": "The Atlantic - Politics",
-      "url": "https://feeds.feedburner.com/AtlanticPoliticsChannel",
-      "category": "World News"
-    },
-    {
-      "name": "The Baltic Times",
-      "url": "https://feeds.feedburner.com/TheBalticTimesNews",
-      "category": "World News"
-    },
-    {
-      "name": "The Corbett Report",
-      "url": "https://www.corbettreport.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "The Federalist",
-      "url": "https://thefederalist.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "The Gateway Pundit",
-      "url": "https://www.thegatewaypundit.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "The Independent",
-      "url": "https://www.independent.co.uk/rss",
-      "category": "World News"
-    },
-    {
-      "name": "The Latest News from the UK and Around the World | Sky News",
-      "url": "https://feeds.skynews.com/feeds/rss/home.xml",
-      "category": "World News"
-    },
-    {
-      "name": "The Real News Network",
-      "url": "https://therealnews.com/feed",
-      "category": "World News"
-    },
-    {
-      "name": "The Standard News",
-      "url": "https://www.standard.co.uk/news/rss",
-      "category": "World News"
-    },
-    {
-      "name": "The Times of Israel",
-      "url": "https://www.timesofisrael.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "Top News - UPI.com",
-      "url": "https://rss.upi.com/news/top_news.rss",
-      "category": "World News"
-    },
-    {
-      "name": "Truthout",
-      "url": "https://truth-out.org/feed?format=feed",
-      "category": "World News"
-    },
-    {
-      "name": "US News – Latest Breaking Headlines, Photos & Videos | New York Post",
-      "url": "https://www.nypost.com/rss/news.xml",
-      "category": "World News"
-    },
-    {
-      "name": "Valuetainment",
-      "url": "https://vtpost.com/feed/",
-      "category": "World News"
-    },
-    {
-      "name": "Vox",
-      "url": "https://www.vox.com/rss/index.xml",
-      "category": "World News"
-    },
-    {
-      "name": "World | Deutsche Welle",
-      "url": "https://rss.dw.de/rdf/rss-en-world",
-      "category": "World News"
-    },
-    {
-      "name": "Yahoo News - Latest News & Headlines",
-      "url": "https://rss.news.yahoo.com/rss/topstories",
-      "category": "World News"
-    },
-    {
-      "name": "ZeroHedge News",
-      "url": "https://feeds.feedburner.com/zerohedge/feed",
-      "category": "World News"
-    },
-    {
-      "name": "BBC News World",
-      "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
-      "category": "World News"
-    },
-    {
-      "name": "NPR News",
-      "url": "https://feeds.npr.org/1001/rss.xml",
-      "category": "World News"
-    },
-    {
-      "name": "Euronews",
-      "url": "https://www.euronews.com/rss",
-      "category": "World News",
-      "tier": 1
-    },
-    {
-      "name": "Reuters World",
-      "url": "https://www.reuters.com/rssFeed/worldNews",
-      "category": "World News",
-      "tier": 1
-    },
-    {
-      "name": "AP News",
-      "url": "https://rsshub.app/apnews/topics/world-news",
-      "category": "World News",
-      "tier": 1
-    },
-    {
-      "name": "Deutsche Welle",
-      "url": "https://rss.dw.com/rss-en-all",
-      "category": "World News",
-      "tier": 1
-    },
-    {
-      "name": "The Diplomat",
-      "url": "https://thediplomat.com/feed/",
-      "category": "World News",
-      "tier": 1
-    },
-    {
-      "name": "War on the Rocks",
-      "url": "https://warontherocks.com/feed/",
-      "category": "World News",
-      "tier": 1
-    },
-    {
-      "name": "Foreign Affairs",
-      "url": "https://www.foreignaffairs.com/rss.xml",
-      "category": "World News",
-      "tier": 1
-    },
-    {
-      "name": "CSIS",
-      "url": "https://www.csis.org/rss",
-      "category": "World News",
-      "tier": 1
-    },
-    {
-      "name": "The Kyiv Independent",
-      "url": "https://kyivindependent.com/feed/",
-      "category": "World News",
-      "tier": 2
-    },
-    {
-      "name": "Institute for the Study of War",
-      "url": "https://www.understandingwar.org/rss.xml",
-      "category": "World News",
-      "tier": 1
-    },
-    {
-      "name": "AI News",
-      "url": "https://www.artificialintelligence-news.com/feed/",
-      "category": "A.I."
-    },
-    {
-      "name": "AI Weekly — AI News & Updates",
-      "url": "https://aiweekly.co/issues.rss",
-      "category": "A.I."
-    },
-    {
-      "name": "AI | The Verge",
-      "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
-      "category": "A.I."
-    },
-    {
-      "name": "AI | VentureBeat",
-      "url": "https://venturebeat.com/category/ai/feed/",
-      "category": "A.I."
-    },
-    {
-      "name": "Artificial Intelligence",
-      "url": "https://flipboard.com/topic/artificialintelligence.rss",
-      "category": "A.I."
-    },
-    {
-      "name": "Artificial Intelligence on Medium",
-      "url": "https://medium.com/feed/tag/artificial-intelligence",
-      "category": "A.I."
-    },
-    {
-      "name": "Deep Learning Weekly",
-      "url": "https://www.deeplearningweekly.com/feed/",
-      "category": "A.I."
-    },
-    {
-      "name": "IEEE Spectrum",
-      "url": "https://spectrum.ieee.org/rss/fulltext",
-      "category": "A.I."
-    },
-    {
-      "name": "KDnuggets",
-      "url": "https://www.kdnuggets.com/feed/",
-      "category": "A.I."
-    },
-    {
-      "name": "Last Week in AI",
-      "url": "https://lastweekin.ai/feed/",
-      "category": "A.I."
-    },
-    {
-      "name": "Latest Results",
-      "url": "https://link.springer.com/search.rss?facet-content-type=Article&facet-journal-id=10462&channel-name=Artificial%20Intelligence%20Review",
-      "category": "A.I."
-    },
-    {
-      "name": "MIT News - Artificial intelligence",
-      "url": "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml",
-      "category": "A.I."
-    },
-    {
-      "name": "MIT News - Computer Science and Artificial Intelligence Laboratory",
-      "url": "https://web.mit.edu/newsoffice/topic/mitcomputers-rss.xml",
-      "category": "A.I."
-    },
-    {
-      "name": "ScienceDaily - Artificial Intelligence",
-      "url": "https://www.sciencedaily.com/rss/computers_math/artificial_intelligence.xml",
-      "category": "A.I."
-    },
-    {
-      "name": "The Guardian - Artificial intelligence",
-      "url": "https://www.guardian.co.uk/technology/artificialintelligenceai/rss",
-      "category": "A.I."
-    },
-    {
-      "name": "aibusiness",
-      "url": "https://aibusiness.com/rss.xml",
-      "category": "A.I."
-    },
-    {
-      "name": "Ars Technica",
-      "url": "https://feeds.arstechnica.com/arstechnica/index",
-      "category": "A.I."
-    },
-    {
-      "name": "Android Authority",
-      "url": "https://feeds.feedburner.com/androidauthority",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Android Police",
-      "url": "https://www.androidpolice.com/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "AppleInsider News",
-      "url": "https://appleinsider.com/rss/news",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "AppleInsider News",
-      "url": "https://www.appleinsider.com/appleinsider.rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Ars Technica - All content",
-      "url": "https://feeds.arstechnica.com/arstechnica/index/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Axios",
-      "url": "https://www.axios.com/feeds/feed.rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "BGR - Industry-Leading Insights In Tech And Entertainment",
-      "url": "https://www.boygeniusreport.com/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Blog – Hackaday",
-      "url": "https://www.hackaday.com/rss.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Boing Boing",
-      "url": "https://feeds.boingboing.net/boingboing/iBag",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Boing Boing",
-      "url": "https://boingboing.net/feed",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Business Insider",
-      "url": "https://feeds2.feedburner.com/businessinsider",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Bustle",
-      "url": "https://www.bustle.com/rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "CNET",
-      "url": "https://news.cnet.com/2547-1_3-0-20.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "COOL HUNTING®",
-      "url": "https://www.coolhunting.com/atom.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Dazed",
-      "url": "https://www.dazeddigital.com/rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Digital Trends",
-      "url": "https://www.digitaltrends.com/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Digital Trends",
-      "url": "https://www.digitaltrends.com/feed/?key=f00edf6a58d2a8740e624dda919cab37",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Discover Magazine",
-      "url": "https://feeds.feedburner.com/DiscoverMag",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Engadget",
-      "url": "https://www.engadget.com/rss-full.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "FOX News Science",
-      "url": "https://feeds.foxnews.com/foxnews/scitech",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Fast Company",
-      "url": "https://feeds.feedburner.com/fastcompany/headlines",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Futurity",
-      "url": "https://www.futurity.org/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "GSMArena.com - Latest articles",
-      "url": "https://www.gsmarena.com/rss-news-reviews.php3",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Hacker News",
-      "url": "https://news.ycombinator.com/rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "How-To Geek",
-      "url": "https://feeds.howtogeek.com/HowToGeek",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "JAMA Current Issue",
-      "url": "https://jama.jamanetwork.com/rss/site_3/67.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Latest from Android Central",
-      "url": "https://www.androidcentral.com/feed",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Latest from Live Science",
-      "url": "https://feeds.feedburner.com/Livesciencecom",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Latest from TechRadar",
-      "url": "https://www.techradar.com/rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Latest from Windows Central",
-      "url": "https://feeds.feedburner.com/wmexperts",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "MacRumors",
-      "url": "https://www.macrumors.com/macrumors.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "MakeUseOf",
-      "url": "https://feeds.feedburner.com/Makeuseof",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "NYT > Technology",
-      "url": "https://www.nytimes.com/services/xml/rss/nyt/Technology.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Nature",
-      "url": "https://www.nature.com/nature/current_issue/rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Quartz",
-      "url": "https://qz.com/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Science & technology",
-      "url": "https://www.economist.com/rss/science_and_technology_rss.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Science Magazine",
-      "url": "https://www.sciencemag.org/rss/current.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "ScienceAlert",
-      "url": "https://feeds.feedburner.com/sciencealert-latestnews",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "ScienceDaily - Health & Medicine News",
-      "url": "https://www.sciencedaily.com/rss/health_medicine.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "ScienceDirect - Cell News",
-      "url": "https://rss.sciencedirect.com/publication/science/00928674",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Slashdot",
-      "url": "https://rss.slashdot.org/Slashdot/slashdot",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Slate - Culture",
-      "url": "https://www.slate.com/rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "TechCrunch",
-      "url": "https://feeds.feedburner.com/Techcrunch",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "TechCrunch",
-      "url": "https://techcrunch.com/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "TechStory",
-      "url": "https://techstory.in/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "TechViral",
-      "url": "https://feeds.feedburner.com/TechViral",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Techdirt",
-      "url": "https://www.techdirt.com/techdirt_rss.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Technology | The Guardian",
-      "url": "https://www.theguardian.com/technology/rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "The Cut",
-      "url": "https://www.thecut.com/feeds/flipboard.rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "The Last Word On Nothing",
-      "url": "https://www.lastwordonnothing.com/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "The Next Web",
-      "url": "https://feeds2.feedburner.com/thenextweb",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "The Official Google Blog",
-      "url": "https://googleblog.blogspot.com/atom.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "The Verge",
-      "url": "https://www.theverge.com/rss/full.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Variety",
-      "url": "https://variety.com/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "VentureBeat",
-      "url": "https://venturebeat.com/feed/",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Vulture",
-      "url": "https://www.vulture.com/feeds/flipboard.rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "WWDRecent Stories",
-      "url": "https://www.wwd.com/rss/2/news/recentstories",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Wired",
-      "url": "https://feeds.wired.com/wired/index",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "www.theregister.com - Articles",
-      "url": "https://www.theregister.co.uk/excerpts.rss",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "BBC News Technology",
-      "url": "https://feeds.bbci.co.uk/news/technology/rss.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "BBC News Science",
-      "url": "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "The Verge",
-      "url": "https://www.theverge.com/rss/index.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Science Daily",
-      "url": "https://www.sciencedaily.com/rss/all.xml",
-      "category": "Tech&Science"
-    },
-    {
-      "name": "Al Jazeera",
-      "url": "https://www.aljazeera.com/xml/rss/all.xml",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Ars Technica",
-      "url": "https://feeds.arstechnica.com/arstechnica/technology-lab",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "BBC Business",
-      "url": "http://feeds.bbci.co.uk/news/business/rss.xml",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "BBC Science",
-      "url": "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "BBC Tech",
-      "url": "http://feeds.bbci.co.uk/news/technology/rss.xml",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "BBC World",
-      "url": "http://feeds.bbci.co.uk/news/world/rss.xml",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Deutsche Welle",
-      "url": "https://rss.dw.com/xml/rss-en-all",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "FT World",
-      "url": "https://www.ft.com/rss/home",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Foreign Policy",
-      "url": "https://foreignpolicy.com/feed/",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "France 24",
-      "url": "https://www.france24.com/en/rss",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Guardian Science",
-      "url": "https://www.theguardian.com/science/rss",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Guardian World",
-      "url": "https://www.theguardian.com/world/rss",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "JPost",
-      "url": "https://www.jpost.com/rss",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Japan Times",
-      "url": "https://www.japantimes.co.jp/feed/",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "NYT Tech",
-      "url": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "NYT World",
-      "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Nature News",
-      "url": "https://www.nature.com/nature.rss",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Science AAAS",
-      "url": "https://www.science.org/rss/news_current.xml",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "South China Morning Post",
-      "url": "https://www.scmp.com/rss/91/feed",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "The Verge",
-      "url": "https://www.theverge.com/rss/index.xml",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "WaPo Tech",
-      "url": "https://feeds.washingtonpost.com/rss/business/technology",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Washington Post World",
-      "url": "https://feeds.washingtonpost.com/rss/world",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Wired",
-      "url": "https://www.wired.com/feed/rss",
-      "category": "Cybersecurity"
-    },
-    {
-      "name": "Lawfare Blog",
-      "url": "https://www.lawfareblog.com/rss.xml",
-      "category": "Cybersecurity",
-      "tier": 2
-    },
-    {
-      "name": "Krebs on Security",
-      "url": "https://krebsonsecurity.com/feed/",
-      "category": "Cybersecurity",
-      "tier": 1
-    },
-    {
-      "name": "The Record",
-      "url": "https://therecord.media/feed",
-      "category": "Cybersecurity",
-      "tier": 1
-    },
-    {
-      "name": "Dark Reading",
-      "url": "https://www.darkreading.com/rss.xml",
-      "category": "Cybersecurity",
-      "tier": 2
-    },
-    {
-      "name": "24/7 Wall St.",
-      "url": "https://feeds.feedburner.com/typepad/RyNm",
-      "category": "Business and investment"
-    },
-    {
-      "name": "All Articles on Seeking Alpha",
-      "url": "https://seekingalpha.com/feed.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Breaking News on Seeking Alpha",
-      "url": "https://seekingalpha.com/market_currents.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Business",
-      "url": "https://www.economist.com/rss/business_rss.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Business Matters",
-      "url": "https://www.bmmagazine.co.uk/feed/",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Business News",
-      "url": "https://www.cnbc.com/id/10001147/device/rss/rss.html",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Business News - Latest Headlines",
-      "url": "https://www.businessnews.com.au/rssfeed/latest.rss",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Business | The Atlantic",
-      "url": "https://feeds.feedburner.com/AtlanticBusinessChannel",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Business | The Guardian",
-      "url": "https://www.guardian.co.uk/business/rss",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Calculated Risk",
-      "url": "https://www.calculatedriskblog.com/feeds/posts/default",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Economic Times",
-      "url": "https://economictimes.indiatimes.com/rssfeedsdefault.cms",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Entrepreneur",
-      "url": "https://feeds.feedburner.com/entrepreneur/latest",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Entrepreneur – Feedly - Latest",
-      "url": "https://www.entrepreneur.com/latest.rss",
-      "category": "Business and investment"
-    },
-    {
-      "name": "FF News | Fintech Finance",
-      "url": "https://www.fintech.finance/feed/",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Finance & economics",
-      "url": "https://www.economist.com/rss/finance_and_economics_rss.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Financial Post",
-      "url": "https://business.financialpost.com/feed/",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Financial Post - Top Stories",
-      "url": "https://feeds.feedburner.com/FP_TopStories",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Fortune",
-      "url": "https://fortune.com/feed/",
-      "category": "Business and investment"
-    },
-    {
-      "name": "HBS Working Knowledge",
-      "url": "https://hbswk.hbs.edu/rss/rss.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Inc.com",
-      "url": "https://www.inc.com/rss/homepage.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Insights Success",
-      "url": "https://www.insightssuccess.com/feed/",
-      "category": "Business and investment"
-    },
-    {
-      "name": "International Business Times Australia",
-      "url": "https://www.ibtimes.com.au/rss",
-      "category": "Business and investment"
-    },
-    {
-      "name": "International homepage",
-      "url": "https://www.ft.com/?format=rss",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Investing.com Analysis",
-      "url": "https://www.investing.com/rss/121899.rss",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Latest Business News on Fox Business",
-      "url": "https://feeds.foxbusiness.com/foxbusiness/latest",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Latest business news",
-      "url": "https://www.abc.net.au/news/feed/51892/rss.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "MarketBeat News Feed",
-      "url": "https://www.marketbeat.com/rss.ashx?type=headlines",
-      "category": "Business and investment"
-    },
-    {
-      "name": "MarketWatch.com - Top Stories",
-      "url": "https://www.marketwatch.com/rss/topstories",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Moneyweb",
-      "url": "https://www.moneyweb.co.za/feed/",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Most popular articles",
-      "url": "https://seekingalpha.com/listing/most-popular-articles.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "NYT > Business",
-      "url": "https://www.nytimes.com/services/xml/rss/nyt/Business.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "News - Globes",
-      "url": "https://www.globes.co.il/webservice/rss/rssfeeder.asmx/FeederNode?iID=1725",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Small Business Trends",
-      "url": "https://feeds.feedburner.com/SmallBusinessTrends",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Talk Business | Entrepreneur & Business Advice",
-      "url": "https://talkbusinessmagazine.co.uk/feed/",
-      "category": "Business and investment"
-    },
-    {
-      "name": "The Economist",
-      "url": "https://www.economist.com/rss/the_world_this_week_rss.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "The European Business Review",
-      "url": "https://www.europeanbusinessreview.com/?feed=rss2",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Yahoo Finance",
-      "url": "https://finance.yahoo.com/news/rssindex",
-      "category": "Business and investment"
-    },
-    {
-      "name": "Yahoo News - Latest News & Headlines",
-      "url": "https://rss.news.yahoo.com/rss/business",
-      "category": "Business and investment"
-    },
-    {
-      "name": "BBC News Business",
-      "url": "https://feeds.bbci.co.uk/news/business/rss.xml",
-      "category": "Business and investment"
-    },
-    {
-      "name": "BeInCrypto",
-      "url": "https://beincrypto.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Bitcoin Insider - Latest news about Bitcoin and all cryptocurrencies. Your daily crypto news habit.",
-      "url": "https://www.bitcoininsider.org/rss.xml",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Blockonomi",
-      "url": "https://blockonomi.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "CaptainAltcoin",
-      "url": "https://captainaltcoin.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "CoinDesk: Bitcoin, Ethereum, Crypto News and Price Data",
-      "url": "https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "CoinGecko Buzz",
-      "url": "https://feeds.feedburner.com/CoingeckoBuzz",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "CoinIdol.com News",
-      "url": "https://coinidol.com/rssshort/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Coinpedia Fintech News",
-      "url": "https://coinpedia.org/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Cointelegraph",
-      "url": "https://cointelegraph.com/rss",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Crypto Briefing",
-      "url": "https://cryptobriefing.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Crypto Daily™",
-      "url": "https://cryptodaily.co.uk/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "CryptoCurrency – Finance Magnates",
-      "url": "https://www.financemagnates.com/cryptocurrency/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "CryptoNewsZ Insider",
-      "url": "https://www.cryptonewsz.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "CryptoPotato",
-      "url": "https://cryptopotato.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Decrypt",
-      "url": "https://decryptmedia.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Ethereum on Medium",
-      "url": "https://medium.com/feed/tag/ethereum",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "News - Cryptonews",
-      "url": "https://cryptonews.com/news/feed",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "News Archives - Coinspeaker",
-      "url": "https://www.coinspeaker.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "NewsBTC",
-      "url": "https://newsbtc.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "NullTX",
-      "url": "https://nulltx.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Stocks - Investing.com",
-      "url": "https://www.investing.com/rss/news.rss",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "The Crypto Basic",
-      "url": "https://thecryptobasic.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "The Daily Hodl",
-      "url": "https://dailyhodl.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "The Merkle News",
-      "url": "https://themerkle.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "U.Today - IT, AI and Fintech Daily News for You Today",
-      "url": "https://u.today/rss_feed",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "ZyCrypto",
-      "url": "https://zycrypto.com/feed/",
-      "category": "Cryptocurrency"
-    },
-    {
-      "name": "Awaken",
-      "url": "https://www.awaken.com/feed/",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Happiness / Good Life Articles from YES!",
-      "url": "https://feeds.feedburner.com/yes/happiness",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Ideapod",
-      "url": "https://thepowerofideas.ideapod.com/feed/",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Learning Mind",
-      "url": "https://www.learning-mind.com/feed/",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Life Coach Code",
-      "url": "https://www.lifecoachcode.com/feed/",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Mindfulbalance",
-      "url": "https://mindfulbalance.org/feed/",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Osho News",
-      "url": "https://www.oshonews.com/feed/",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Power of Positivity: Positive Thinking & Attitude",
-      "url": "https://www.powerofpositivity.com/feed/",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Psychology Headlines Around the World",
-      "url": "https://www.socialpsychology.org/headlines.rss",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Psychology News - Research Topics - Neuroscience News",
-      "url": "https://neurosciencenews.com/neuroscience-topics/psychology/feed/",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Psychology Research News -- ScienceDaily",
-      "url": "https://www.sciencedaily.com/rss/mind_brain/psychology.xml",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Psychology Today: News",
-      "url": "https://www.psychologytoday.com/gb/news/feed?_wrapper_format=html",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Psychology Today: The Latest",
-      "url": "https://www.psychologytoday.com/gb/front/feed",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "Terri Cole",
-      "url": "https://terricole.com/feed/",
-      "category": "Spirituality & Health"
-    },
-    {
-      "name": "The Awakened State",
-      "url": "https://theawakenedstate.net/feed/",
-      "category": "Spirituality & Health"
-    }
+    {"name": "ABC News", "url": "https://www.abc.net.au/news/feed/46182/rss.xml", "category": "World News"},
+    {"name": "ABC News: Top Stories", "url": "https://feeds.abcnews.com/abcnews/topstories", "category": "World News"},
+    {"name": "Channel 4 News", "url": "https://www.channel4.com/news/latest-news/rss", "category": "World News"},
+    {"name": "DER SPIEGEL - International", "url": "https://www.spiegel.de/international/index.rss", "category": "World News"},
+    {"name": "Democracy Now!", "url": "https://www.democracynow.org/democracynow.rss", "category": "World News"},
+    {"name": "Euro Weekly News", "url": "https://www.euroweeklynews.com/feed/", "category": "World News"},
+    {"name": "FOX News International", "url": "https://feeds.foxnews.com/foxnews/world", "category": "World News"},
+    {"name": "France 24 - International", "url": "https://www.france24.com/en/monde/rss", "category": "World News"},
+    {"name": "France 24 - Europe", "url": "https://www.france24.com/en/europe/rss", "category": "World News"},
+    {"name": "France 24 - France", "url": "https://www.france24.com/en/france/rss", "category": "World News"},
+    {"name": "CBS News", "url": "https://www.cbsnews.com/feeds/rss/main.rss", "category": "World News"},
+    {"name": "South China Morning Post - Hong Kong", "url": "https://www.scmp.com/rss/hong_kong.xml", "category": "World News"},
+    {"name": "The Hindu - India", "url": "https://www.thehindu.com/news/national/?service=rss", "category": "World News"},
+    {"name": "Insider Paper", "url": "https://insiderpaper.com/feed/", "category": "World News"},
+    {"name": "Forexlive", "url": "https://www.forexlive.com/feed/news", "category": "World News"},
+    {"name": "The Hill", "url": "https://thehill.com/rss/syndicator/19110", "category": "World News"},
+    {"name": "MoneyWeek", "url": "https://moneyweek.com/feed/all", "category": "World News"},
+    {"name": "NBC News World", "url": "https://feeds.nbcnews.com/feeds/worldnews", "category": "World News"},
+    {"name": "NYT - Politics", "url": "https://www.nytimes.com/services/xml/rss/nyt/Politics.xml", "category": "World News"},
+    {"name": "NYT - Top Stories", "url": "https://www.nytimes.com/services/xml/rss/nyt/HomePage.xml", "category": "World News"},
+    {"name": "NYT - World News", "url": "https://www.nytimes.com/services/xml/rss/nyt/World.xml", "category": "World News"},
+    {"name": "New Scientist", "url": "https://feeds.newscientist.com/home", "category": "World News"},
+    {"name": "Los Angeles Times", "url": "https://www.latimes.com/rss2.0.xml", "category": "World News"},
+    {"name": "Euronews", "url": "https://feeds.feedburner.com/euronews/en/home/", "category": "World News"},
+    {"name": "Nikkei Asian Review", "url": "https://asia.nikkei.com/rss/feed/nar", "category": "World News"},
+    {"name": "PBS News Hour - Segments", "url": "https://www.pbs.org/newshour/rss/podcast.xml", "category": "World News"},
+    {"name": "PBS NewsHour - World", "url": "https://www.pbs.org/newshour/feeds/rss/world", "category": "World News"},
+    {"name": "RealClearPolitics", "url": "https://www.realclearpolitics.com/index.xml", "category": "World News"},
+    {"name": "The Age - Latest News", "url": "https://www.theage.com.au/rss/feed.xml", "category": "World News"},
+    {"name": "The Atlantic", "url": "https://feeds.feedburner.com/TheAtlantic", "category": "World News"},
+    {"name": "The Baltic Times", "url": "https://feeds.feedburner.com/TheBalticTimesNews", "category": "World News"},
+    {"name": "The Independent", "url": "https://www.independent.co.uk/rss", "category": "World News"},
+    {"name": "Sky News World", "url": "https://feeds.skynews.com/feeds/rss/home.xml", "category": "World News"},
+    {"name": "The Standard", "url": "https://www.standard.co.uk/news/rss", "category": "World News"},
+    {"name": "The Times of Israel", "url": "https://www.timesofisrael.com/feed/", "category": "World News"},
+    {"name": "UPI Top News", "url": "https://rss.upi.com/news/top_news.rss", "category": "World News"},
+    {"name": "New York Post", "url": "https://www.nypost.com/rss/news.xml", "category": "World News"},
+    {"name": "Yahoo News", "url": "https://rss.news.yahoo.com/rss/topstories", "category": "World News"},
+    {"name": "BBC News World", "url": "https://feeds.bbci.co.uk/news/world/rss.xml", "category": "World News", "tier": 1},
+    {"name": "NPR News", "url": "https://feeds.npr.org/1001/rss.xml", "category": "World News", "tier": 1},
+    {"name": "NPR World", "url": "https://feeds.npr.org/1004/rss.xml", "category": "World News", "tier": 1},
+    {"name": "Euronews (Tier 1)", "url": "https://www.euronews.com/rss", "category": "World News", "tier": 1},
+    {"name": "Deutsche Welle", "url": "https://rss.dw.com/xml/rss-en-all", "category": "World News", "tier": 1},
+    {"name": "Al Jazeera English", "url": "https://www.aljazeera.com/xml/rss/all.xml", "category": "World News", "tier": 1},
+    {"name": "The Diplomat", "url": "https://thediplomat.com/feed/", "category": "World News", "tier": 1},
+    {"name": "War on the Rocks", "url": "https://warontherocks.com/feed/", "category": "World News", "tier": 1},
+    {"name": "Foreign Affairs", "url": "https://www.foreignaffairs.com/rss.xml", "category": "World News", "tier": 1},
+    {"name": "CSIS", "url": "https://www.csis.org/rss", "category": "World News", "tier": 1},
+    {"name": "The Kyiv Independent", "url": "https://kyivindependent.com/feed/", "category": "World News", "tier": 2},
+    {"name": "Institute for the Study of War", "url": "https://www.understandingwar.org/rss.xml", "category": "World News", "tier": 1},
+    {"name": "JPost", "url": "https://www.jpost.com/rss", "category": "World News", "tier": 2},
+
+    {"name": "AI News", "url": "https://www.artificialintelligence-news.com/feed/", "category": "A.I."},
+    {"name": "AI Weekly", "url": "https://aiweekly.co/issues.rss", "category": "A.I."},
+    {"name": "AI | The Verge", "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "category": "A.I."},
+    {"name": "AI | VentureBeat", "url": "https://venturebeat.com/category/ai/feed/", "category": "A.I."},
+    {"name": "TechCrunch AI", "url": "https://techcrunch.com/category/artificial-intelligence/feed/", "category": "A.I."},
+    {"name": "MIT Tech Review AI", "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed", "category": "A.I."},
+    {"name": "VentureBeat AI", "url": "https://venturebeat.com/category/ai/feed/", "category": "A.I."},
+    {"name": "Google AI Blog", "url": "https://research.google/blog/rss/", "category": "A.I."},
+    {"name": "Artificial Intelligence on Medium", "url": "https://medium.com/feed/tag/artificial-intelligence", "category": "A.I."},
+    {"name": "Deep Learning Weekly", "url": "https://www.deeplearningweekly.com/feed/", "category": "A.I."},
+    {"name": "IEEE Spectrum", "url": "https://spectrum.ieee.org/rss/fulltext", "category": "A.I."},
+    {"name": "KDnuggets", "url": "https://www.kdnuggets.com/feed/", "category": "A.I."},
+    {"name": "Last Week in AI", "url": "https://lastweekin.ai/feed/", "category": "A.I."},
+    {"name": "MIT News - Artificial intelligence", "url": "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml", "category": "A.I."},
+    {"name": "MIT News - CSAIL", "url": "https://web.mit.edu/newsoffice/topic/mitcomputers-rss.xml", "category": "A.I."},
+    {"name": "ScienceDaily - Artificial Intelligence", "url": "https://www.sciencedaily.com/rss/computers_math/artificial_intelligence.xml", "category": "A.I."},
+    {"name": "The Guardian - Artificial intelligence", "url": "https://www.guardian.co.uk/technology/artificialintelligenceai/rss", "category": "A.I."},
+    {"name": "AI Business", "url": "https://aibusiness.com/rss.xml", "category": "A.I."},
+    {"name": "Ars Technica", "url": "https://feeds.arstechnica.com/arstechnica/index", "category": "A.I."},
+
+    {"name": "Android Authority", "url": "https://feeds.feedburner.com/androidauthority", "category": "Tech&Science"},
+    {"name": "Android Police", "url": "https://www.androidpolice.com/feed/", "category": "Tech&Science"},
+    {"name": "AppleInsider News", "url": "https://appleinsider.com/rss/news", "category": "Tech&Science"},
+    {"name": "Ars Technica - All content", "url": "https://feeds.arstechnica.com/arstechnica/index/", "category": "Tech&Science"},
+    {"name": "Axios", "url": "https://www.axios.com/feeds/feed.rss", "category": "Tech&Science"},
+    {"name": "Blog - Hackaday", "url": "https://www.hackaday.com/rss.xml", "category": "Tech&Science"},
+    {"name": "Boing Boing", "url": "https://feeds.boingboing.net/boingboing/iBag", "category": "Tech&Science"},
+    {"name": "Business Insider", "url": "https://feeds2.feedburner.com/businessinsider", "category": "Tech&Science"},
+    {"name": "CNET", "url": "https://news.cnet.com/2547-1_3-0-20.xml", "category": "Tech&Science"},
+    {"name": "COOL HUNTING", "url": "https://www.coolhunting.com/atom.xml", "category": "Tech&Science"},
+    {"name": "Digital Trends", "url": "https://www.digitaltrends.com/feed/", "category": "Tech&Science"},
+    {"name": "Discover Magazine", "url": "https://feeds.feedburner.com/DiscoverMag", "category": "Tech&Science"},
+    {"name": "Engadget", "url": "https://www.engadget.com/rss-full.xml", "category": "Tech&Science"},
+    {"name": "FOX News Science", "url": "https://feeds.foxnews.com/foxnews/scitech", "category": "Tech&Science"},
+    {"name": "Fast Company", "url": "https://feeds.feedburner.com/fastcompany/headlines", "category": "Tech&Science"},
+    {"name": "Futurity", "url": "https://www.futurity.org/feed/", "category": "Tech&Science"},
+    {"name": "GSMArena", "url": "https://www.gsmarena.com/rss-news-reviews.php3", "category": "Tech&Science"},
+    {"name": "Hacker News", "url": "https://news.ycombinator.com/rss", "category": "Tech&Science"},
+    {"name": "How-To Geek", "url": "https://feeds.howtogeek.com/HowToGeek", "category": "Tech&Science"},
+    {"name": "JAMA Current Issue", "url": "https://jama.jamanetwork.com/rss/site_3/67.xml", "category": "Tech&Science"},
+    {"name": "Android Central", "url": "https://www.androidcentral.com/feed", "category": "Tech&Science"},
+    {"name": "Live Science", "url": "https://feeds.feedburner.com/Livesciencecom", "category": "Tech&Science"},
+    {"name": "TechRadar", "url": "https://www.techradar.com/rss", "category": "Tech&Science"},
+    {"name": "Windows Central", "url": "https://feeds.feedburner.com/wmexperts", "category": "Tech&Science"},
+    {"name": "MacRumors", "url": "https://www.macrumors.com/macrumors.xml", "category": "Tech&Science"},
+    {"name": "MakeUseOf", "url": "https://feeds.feedburner.com/Makeuseof", "category": "Tech&Science"},
+    {"name": "NYT - Technology", "url": "https://www.nytimes.com/services/xml/rss/nyt/Technology.xml", "category": "Tech&Science"},
+    {"name": "Nature", "url": "https://www.nature.com/nature/current_issue/rss", "category": "Tech&Science"},
+    {"name": "Quartz", "url": "https://qz.com/feed/", "category": "Tech&Science"},
+    {"name": "The Economist - Science & Technology", "url": "https://www.economist.com/rss/science_and_technology_rss.xml", "category": "Tech&Science"},
+    {"name": "Science Magazine", "url": "https://www.sciencemag.org/rss/current.xml", "category": "Tech&Science"},
+    {"name": "ScienceAlert", "url": "https://feeds.feedburner.com/sciencealert-latestnews", "category": "Tech&Science"},
+    {"name": "ScienceDaily - Health & Medicine", "url": "https://www.sciencedaily.com/rss/health_medicine.xml", "category": "Tech&Science"},
+    {"name": "ScienceDaily - All", "url": "https://www.sciencedaily.com/rss/all.xml", "category": "Tech&Science"},
+    {"name": "Slashdot", "url": "https://rss.slashdot.org/Slashdot/slashdot", "category": "Tech&Science"},
+    {"name": "TechCrunch", "url": "https://techcrunch.com/feed/", "category": "Tech&Science"},
+    {"name": "TechStory", "url": "https://techstory.in/feed/", "category": "Tech&Science"},
+    {"name": "Techdirt", "url": "https://www.techdirt.com/techdirt_rss.xml", "category": "Tech&Science"},
+    {"name": "The Guardian - Technology", "url": "https://www.theguardian.com/technology/rss", "category": "Tech&Science"},
+    {"name": "The Next Web", "url": "https://feeds2.feedburner.com/thenextweb", "category": "Tech&Science"},
+    {"name": "The Official Google Blog", "url": "https://googleblog.blogspot.com/atom.xml", "category": "Tech&Science"},
+    {"name": "The Verge", "url": "https://www.theverge.com/rss/index.xml", "category": "Tech&Science"},
+    {"name": "VentureBeat", "url": "https://venturebeat.com/feed/", "category": "Tech&Science"},
+    {"name": "Wired", "url": "https://feeds.wired.com/wired/index", "category": "Tech&Science"},
+    {"name": "The Register", "url": "https://www.theregister.co.uk/excerpts.rss", "category": "Tech&Science"},
+    {"name": "BBC News Technology", "url": "https://feeds.bbci.co.uk/news/technology/rss.xml", "category": "Tech&Science"},
+    {"name": "BBC News Science", "url": "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml", "category": "Tech&Science"},
+
+    {"name": "The Hacker News", "url": "https://feeds.feedburner.com/TheHackersNews", "category": "Cybersecurity", "tier": 1},
+    {"name": "BleepingComputer", "url": "https://www.bleepingcomputer.com/feed/", "category": "Cybersecurity", "tier": 1},
+    {"name": "Dark Reading", "url": "https://www.darkreading.com/rss.xml", "category": "Cybersecurity", "tier": 2},
+    {"name": "CyberScoop", "url": "https://www.cyberscoop.com/feed/", "category": "Cybersecurity", "tier": 2},
+    {"name": "Krebs on Security", "url": "https://krebsonsecurity.com/feed/", "category": "Cybersecurity", "tier": 1},
+    {"name": "The Record", "url": "https://therecord.media/feed", "category": "Cybersecurity", "tier": 1},
+    {"name": "Lawfare Blog", "url": "https://www.lawfareblog.com/rss.xml", "category": "Cybersecurity", "tier": 2},
+    {"name": "Ars Technica - Security", "url": "https://feeds.arstechnica.com/arstechnica/technology-lab", "category": "Cybersecurity"},
+    {"name": "BBC World", "url": "https://feeds.bbci.co.uk/news/world/rss.xml", "category": "Cybersecurity"},
+    {"name": "Deutsche Welle - Cyber", "url": "https://rss.dw.com/xml/rss-en-all", "category": "Cybersecurity"},
+    {"name": "FT World", "url": "https://www.ft.com/rss/home", "category": "Cybersecurity"},
+    {"name": "Foreign Policy", "url": "https://foreignpolicy.com/feed/", "category": "Cybersecurity"},
+    {"name": "France 24", "url": "https://www.france24.com/en/rss", "category": "Cybersecurity"},
+    {"name": "Guardian World", "url": "https://www.theguardian.com/world/rss", "category": "Cybersecurity"},
+    {"name": "Japan Times", "url": "https://www.japantimes.co.jp/feed/", "category": "Cybersecurity"},
+    {"name": "NYT Tech", "url": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml", "category": "Cybersecurity"},
+    {"name": "NYT World", "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "category": "Cybersecurity"},
+    {"name": "Nature News", "url": "https://www.nature.com/nature.rss", "category": "Cybersecurity"},
+    {"name": "Science AAAS", "url": "https://www.science.org/rss/news_current.xml", "category": "Cybersecurity"},
+    {"name": "South China Morning Post", "url": "https://www.scmp.com/rss/91/feed", "category": "Cybersecurity"},
+    {"name": "WaPo Tech", "url": "https://feeds.washingtonpost.com/rss/business/technology", "category": "Cybersecurity"},
+    {"name": "Washington Post World", "url": "https://feeds.washingtonpost.com/rss/world", "category": "Cybersecurity"},
+    {"name": "Wired - Cyber", "url": "https://www.wired.com/feed/rss", "category": "Cybersecurity"},
+
+    {"name": "24/7 Wall St.", "url": "https://feeds.feedburner.com/typepad/RyNm", "category": "Business and investment"},
+    {"name": "Seeking Alpha - All Articles", "url": "https://seekingalpha.com/feed.xml", "category": "Business and investment"},
+    {"name": "Seeking Alpha - Breaking", "url": "https://seekingalpha.com/market_currents.xml", "category": "Business and investment"},
+    {"name": "The Economist - Business", "url": "https://www.economist.com/rss/business_rss.xml", "category": "Business and investment"},
+    {"name": "Business Matters", "url": "https://www.bmmagazine.co.uk/feed/", "category": "Business and investment"},
+    {"name": "CNBC Business News", "url": "https://www.cnbc.com/id/10001147/device/rss/rss.html", "category": "Business and investment"},
+    {"name": "Business News Australia", "url": "https://www.businessnews.com.au/rssfeed/latest.rss", "category": "Business and investment"},
+    {"name": "Business | The Atlantic", "url": "https://feeds.feedburner.com/AtlanticBusinessChannel", "category": "Business and investment"},
+    {"name": "Business | The Guardian", "url": "https://www.guardian.co.uk/business/rss", "category": "Business and investment"},
+    {"name": "Calculated Risk", "url": "https://www.calculatedriskblog.com/feeds/posts/default", "category": "Business and investment"},
+    {"name": "Economic Times", "url": "https://economictimes.indiatimes.com/rssfeedsdefault.cms", "category": "Business and investment"},
+    {"name": "Entrepreneur", "url": "https://feeds.feedburner.com/entrepreneur/latest", "category": "Business and investment"},
+    {"name": "Fintech Finance", "url": "https://www.fintech.finance/feed/", "category": "Business and investment"},
+    {"name": "The Economist - Finance & Economics", "url": "https://www.economist.com/rss/finance_and_economics_rss.xml", "category": "Business and investment"},
+    {"name": "Financial Post", "url": "https://business.financialpost.com/feed/", "category": "Business and investment"},
+    {"name": "Financial Post - Top Stories", "url": "https://feeds.feedburner.com/FP_TopStories", "category": "Business and investment"},
+    {"name": "Fortune", "url": "https://fortune.com/feed/", "category": "Business and investment"},
+    {"name": "HBS Working Knowledge", "url": "https://hbswk.hbs.edu/rss/rss.xml", "category": "Business and investment"},
+    {"name": "Inc.com", "url": "https://www.inc.com/rss/homepage.xml", "category": "Business and investment"},
+    {"name": "FT International", "url": "https://www.ft.com/?format=rss", "category": "Business and investment"},
+    {"name": "Investing.com Analysis", "url": "https://www.investing.com/rss/121899.rss", "category": "Business and investment"},
+    {"name": "Fox Business", "url": "https://feeds.foxbusiness.com/foxbusiness/latest", "category": "Business and investment"},
+    {"name": "ABC Business", "url": "https://www.abc.net.au/news/feed/51892/rss.xml", "category": "Business and investment"},
+    {"name": "MarketBeat", "url": "https://www.marketbeat.com/rss.ashx?type=headlines", "category": "Business and investment"},
+    {"name": "MarketWatch", "url": "https://www.marketwatch.com/rss/topstories", "category": "Business and investment", "tier": 2},
+    {"name": "Moneyweb", "url": "https://www.moneyweb.co.za/feed/", "category": "Business and investment"},
+    {"name": "Seeking Alpha - Most Popular", "url": "https://seekingalpha.com/listing/most-popular-articles.xml", "category": "Business and investment"},
+    {"name": "NYT - Business", "url": "https://www.nytimes.com/services/xml/rss/nyt/Business.xml", "category": "Business and investment"},
+    {"name": "Globes", "url": "https://www.globes.co.il/webservice/rss/rssfeeder.asmx/FeederNode?iID=1725", "category": "Business and investment"},
+    {"name": "Small Business Trends", "url": "https://feeds.feedburner.com/SmallBusinessTrends", "category": "Business and investment"},
+    {"name": "The Economist - World This Week", "url": "https://www.economist.com/rss/the_world_this_week_rss.xml", "category": "Business and investment"},
+    {"name": "European Business Review", "url": "https://www.europeanbusinessreview.com/?feed=rss2", "category": "Business and investment"},
+    {"name": "Yahoo Finance", "url": "https://finance.yahoo.com/news/rssindex", "category": "Business and investment"},
+    {"name": "Yahoo Business News", "url": "https://rss.news.yahoo.com/rss/business", "category": "Business and investment"},
+    {"name": "BBC News Business", "url": "https://feeds.bbci.co.uk/news/business/rss.xml", "category": "Business and investment"},
+    {"name": "Bloomberg Markets", "url": "https://feeds.bloomberg.com/markets/news.rss", "category": "Business and investment", "tier": 1},
+    {"name": "Forbes Business", "url": "https://www.forbes.com/business/feed/", "category": "Business and investment", "tier": 2},
+
+    {"name": "BeInCrypto", "url": "https://beincrypto.com/feed/", "category": "Cryptocurrency"},
+    {"name": "Bitcoin Insider", "url": "https://www.bitcoininsider.org/rss.xml", "category": "Cryptocurrency"},
+    {"name": "Blockonomi", "url": "https://blockonomi.com/feed/", "category": "Cryptocurrency"},
+    {"name": "CaptainAltcoin", "url": "https://captainaltcoin.com/feed/", "category": "Cryptocurrency"},
+    {"name": "CoinDesk", "url": "https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml", "category": "Cryptocurrency"},
+    {"name": "CoinGecko Buzz", "url": "https://feeds.feedburner.com/CoingeckoBuzz", "category": "Cryptocurrency"},
+    {"name": "CoinIdol", "url": "https://coinidol.com/rssshort/", "category": "Cryptocurrency"},
+    {"name": "Coinpedia", "url": "https://coinpedia.org/feed/", "category": "Cryptocurrency"},
+    {"name": "Cointelegraph", "url": "https://cointelegraph.com/rss", "category": "Cryptocurrency"},
+    {"name": "Crypto Briefing", "url": "https://cryptobriefing.com/feed/", "category": "Cryptocurrency"},
+    {"name": "Crypto Daily", "url": "https://cryptodaily.co.uk/feed/", "category": "Cryptocurrency"},
+    {"name": "Finance Magnates - Crypto", "url": "https://www.financemagnates.com/cryptocurrency/feed/", "category": "Cryptocurrency"},
+    {"name": "CryptoNewsZ", "url": "https://www.cryptonewsz.com/feed/", "category": "Cryptocurrency"},
+    {"name": "CryptoPotato", "url": "https://cryptopotato.com/feed/", "category": "Cryptocurrency"},
+    {"name": "Decrypt", "url": "https://decryptmedia.com/feed/", "category": "Cryptocurrency"},
+    {"name": "Ethereum on Medium", "url": "https://medium.com/feed/tag/ethereum", "category": "Cryptocurrency"},
+    {"name": "Cryptonews", "url": "https://cryptonews.com/news/feed", "category": "Cryptocurrency"},
+    {"name": "Coinspeaker", "url": "https://www.coinspeaker.com/feed/", "category": "Cryptocurrency"},
+    {"name": "NewsBTC", "url": "https://newsbtc.com/feed/", "category": "Cryptocurrency"},
+    {"name": "NullTX", "url": "https://nulltx.com/feed/", "category": "Cryptocurrency"},
+    {"name": "Investing.com Stocks", "url": "https://www.investing.com/rss/news.rss", "category": "Cryptocurrency"},
+    {"name": "The Crypto Basic", "url": "https://thecryptobasic.com/feed/", "category": "Cryptocurrency"},
+    {"name": "The Daily Hodl", "url": "https://dailyhodl.com/feed/", "category": "Cryptocurrency"},
+    {"name": "The Merkle News", "url": "https://themerkle.com/feed/", "category": "Cryptocurrency"},
+    {"name": "U.Today", "url": "https://u.today/rss_feed", "category": "Cryptocurrency"},
+    {"name": "ZyCrypto", "url": "https://zycrypto.com/feed/", "category": "Cryptocurrency"},
+
+    {"name": "Switzerland - Blick", "url": "https://www.blick.ch/rss.xml", "category": "Regional"},
+    {"name": "Switzerland - SRF News", "url": "https://www.srf.ch/news/rss", "category": "Regional"},
+    {"name": "Switzerland - Tages-Anzeiger", "url": "https://www.tagesanzeiger.ch/rss.html", "category": "Regional"},
+
+    {"name": "UK - BBC UK", "url": "https://feeds.bbci.co.uk/news/uk/rss.xml", "category": "Regional"},
+    {"name": "UK - Guardian UK", "url": "https://www.theguardian.com/uk/rss", "category": "Regional"},
+    {"name": "UK - Telegraph", "url": "https://www.telegraph.co.uk/rss.xml", "category": "Regional"},
+    {"name": "UK - BBC Scotland", "url": "https://feeds.bbci.co.uk/news/scotland/rss.xml", "category": "Regional"},
+    {"name": "UK - BBC England", "url": "https://feeds.bbci.co.uk/news/england/rss.xml", "category": "Regional"},
+    {"name": "UK - Independent", "url": "https://www.independent.co.uk/rss", "category": "Regional"},
+    {"name": "UK - Sky News UK", "url": "https://feeds.skynews.com/feeds/rss/uk.xml", "category": "Regional"},
+    {"name": "UK - Express", "url": "https://www.express.co.uk/posts/rss/1/uknews", "category": "Regional"},
+    {"name": "UK - Metro", "url": "https://metro.co.uk/feed/", "category": "Regional"},
+
+    {"name": "Hungary - Hungary Today", "url": "https://hungarytoday.hu/feed/", "category": "Regional"},
+    {"name": "Hungary - Daily News Hungary", "url": "https://dailynewshungary.com/feed/", "category": "Regional"},
+    {"name": "Hungary - Budapest Times", "url": "https://budapesttimes.hu/feed/", "category": "Regional"},
+    {"name": "Hungary - Politics.hu", "url": "https://politics.hu/feed/", "category": "Regional"},
+
+    {"name": "Romania - Agerpres", "url": "https://www.agerpres.ro/rss.html", "category": "Regional"},
+    {"name": "Romania - Mediafax", "url": "https://www.mediafax.ro/rss.html", "category": "Regional"},
+    {"name": "Romania - Business Review RO", "url": "https://businessreview.ro/feed/", "category": "Regional"},
+    {"name": "Romania - RTV.net", "url": "https://rtv.net/feed", "category": "Regional"},
+    {"name": "Romania - Stiri.ro", "url": "https://www.stiri.ro/rss", "category": "Regional"},
+    {"name": "Romania - B1.ro", "url": "https://www.b1.ro/rss/", "category": "Regional"}
   ]
 }

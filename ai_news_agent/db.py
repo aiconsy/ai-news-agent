@@ -1,4 +1,6 @@
-"""Database layer — SQLite for headlines dedup and article tracking."""
+"""Database layer
+
+from __future__ import annotations — SQLite for headlines dedup and article tracking."""
 
 import hashlib
 import json
@@ -96,7 +98,7 @@ def mark_seen(title: str, url: str = "", category: str = "", priority: str = "ME
     try:
         url_hash = _title_hash(title)
         conn.execute(
-            """INSERT OR REPLACE INTO headlines_seen (url_hash, title, url, seen_at, category, priority)
+            """INSERT OR IGNORE INTO headlines_seen (url_hash, title, url, seen_at, category, priority)
                VALUES (?, ?, ?, ?, ?, ?)""",
             (url_hash, title, url, datetime.now(timezone.utc).isoformat(), category, priority),
         )
@@ -114,7 +116,7 @@ def save_article(article: dict, conn: sqlite3.Connection | None = None) -> None:
         close = True
     try:
         conn.execute(
-            """INSERT OR REPLACE INTO articles
+            """INSERT OR IGNORE INTO articles
                (url, title, source, category, priority, tier, summary, content, fetched_at, deep_read)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
@@ -150,7 +152,7 @@ def save_briefing(text_path: str, audio_path: str, word_count: int, runtime_seco
         conn.close()
 
 
-def cleanup_old(hours: int = 0 | None) -> int:
+def cleanup_old(hours: int | None = 0) -> int:
     """Remove headlines older than the given hours. Returns count deleted."""
     if hours is None:
         hours = DEDUP_HOURS * 2  # Keep 2x dedup window

@@ -1,4 +1,9 @@
-"""Briefing synthesis — generate podcast-length news briefing from classified articles."""
+"""Briefing synthesis — generate podcast-length news briefing from classified articles.
+
+v5.2: Intelligence briefing prompt — world news editor for intelligence briefing service.
+Structured sections: World & Geopolitics, Economy & Markets, Technology & Science,
+Cybersecurity, Regional. Strict no-junk rules.
+"""
 
 import json
 import logging
@@ -9,43 +14,58 @@ from .classify import _call_llm
 log = logging.getLogger("ai_news_agent")
 
 
-GEOPOLITICS_PROMPT = """You are a seasoned geopolitical analyst and news anchor producing a podcast-length briefing. 
+INTELLIGENCE_BRIEFING_PROMPT = """You are a world news editor for an intelligence briefing service. Your audience is a professional who wants HIGH-IMPACT news with LONG-TERM global significance — not hype, drama, sports, gossip, or entertainment.
 
-风格要求：
-- Write in a natural, conversational podcast style — as if you're speaking to an intelligent listener
-- Lead with the most urgent geopolitical developments
-- Provide context and implications, not just reporting
-- Use transitions between stories ("Now turning to...", "In other developments...", "Meanwhile...")
-- End with a brief outlook on what to watch next
+Your job is to produce a concise, professional intelligence briefing from the articles provided below.
+
+STRICT RULES:
+- NO sports
+- NO celebrity gossip
+- NO entertainment
+- NO lifestyle
+- NO opinion pieces
+- If a story won't matter in a week — SKIP IT
+- Only include stories that a world leader, investor, or strategist would need to know
+
+FORMAT:
+Structure the briefing with these sections (skip a section if no relevant articles):
+
+## World & Geopolitics
+(Wars, diplomacy, sanctions, treaties, political crises, elections with global impact)
+
+## Economy & Markets
+(Market movements, central bank decisions, trade, inflation, recession signals)
+
+## Technology & Science
+(AI breakthroughs, semiconductors, quantum, space, major research, cyber policy)
+
+## Cybersecurity
+(Cyberattacks, data breaches, zero-days, state-sponsored operations, cyber policy)
+
+## Regional
+(Important regional developments — Switzerland, UK, Hungary, Romania, and other regional news)
+
+WRITING STYLE:
+- Be concise and factual — 2-4 sentences per story
+- Lead with the most important developments
+- Provide context on WHY it matters, not just WHAT happened
+- Use bullet points within sections for readability
+- Write 800-2,000 words total
+- No filler, no fluff, no transitions like "Now turning to..." — just the news
 - Be precise with numbers, names, and locations
-- Avoid editorializing — present facts and analysis
-- Write 1,500-3,000 words for a comprehensive briefing
 
-Structure:
-1. **Opening** — Top 2-3 stories of the hour
-2. **Geopolitics** — Wars, diplomacy, sanctions, treaties
-3. **Technology** — AI, cybersecurity, semiconductors, space
-4. **Finance** — Markets, central banks, trade, economy
-5. **Closing** — What to watch next
-
-Do NOT include any of the following:
-- Personal opinions or subjective commentary beyond analysis
-- References to specific individuals' personal lives
-- Unverified rumors
-- Local/regional news of limited global interest
-
-Produce a complete briefing from these articles:"""
+Produce the briefing from these articles:"""
 
 
 def synthesize_briefing(articles: list[dict]) -> str:
     """Generate a podcast-length briefing from classified articles.
-    
+
     Takes the top MAX_NOTEWORTHY articles, formats them as context,
     and calls the synthesis LLM to generate a natural briefing.
     """
     # Select top articles
     top_articles = articles[:MAX_NOTEWORTHY]
-    
+
     # Format articles for LLM context
     context_parts = []
     for i, article in enumerate(top_articles, 1):
@@ -67,7 +87,7 @@ def synthesize_briefing(articles: list[dict]) -> str:
         )
 
     context = "\n\n".join(context_parts)
-    prompt = f"{GEOPOLITICS_PROMPT}\n\n{context}\n\nProduce the briefing now:"
+    prompt = f"{INTELLIGENCE_BRIEFING_PROMPT}\n\n{context}\n\nProduce the briefing now:"
 
     log.info(f"Synthesizing briefing from {len(top_articles)} articles (context: {len(prompt)} chars)")
 

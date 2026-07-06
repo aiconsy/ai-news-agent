@@ -1,4 +1,8 @@
-"""Main pipeline — orchestrates the full news intelligence briefing."""
+"""Main pipeline — orchestrates the full news intelligence briefing.
+
+v5.2: --deliver-at HH:MM flag for scheduled delivery. _wait_until() sleeps
+until target time.
+"""
 
 import argparse
 import logging
@@ -34,17 +38,53 @@ def _is_quiet_hours() -> bool:
         return QUIET_HOUR_START <= hour < QUIET_HOUR_END
 
 
-def run_pipeline(force: bool = False, text_only: bool = False, no_deliver: bool = False) -> dict:
+def _wait_until(target_hhmm: str) -> None:
+    """Sleep until the target time (HH:MM format, local time).
+
+    If the target time has already passed today, wait until tomorrow.
+    """
+    try:
+        target_hour, target_minute = map(int, target_hhmm.split(":"))
+    except (ValueError, AttributeError):
+        log.error(f"Invalid --deliver-at format: {target_hhmm} (expected HH:MM)")
+        return
+
+    now = datetime.now().astimezone()
+    target = now.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
+
+    if target <= now:
+        target += timedelta(days=1)
+
+    wait_seconds = (target - now).total_seconds()
+    log.info(f"Waiting {wait_seconds:.0f}s ({wait_seconds/3600:.1f}h) until {target.strftime('%H:%M')} local time...")
+
+    # Sleep in chunks so we can log progress and remain responsive
+    while True:
+        remaining = (target - datetime.now().astimezone()).total_seconds()
+        if remaining <= 0:
+            break
+        sleep_chunk = min(remaining, 60)  # Check every minute max
+        time.sleep(sleep_chunk)
+
+    log.info(f"Reached target time {target.strftime('%H:%M')} — proceeding with pipeline")
+
+
+def run_pipeline(force: bool = False, text_only: bool = False, no_deliver: bool = False, deliver_at: str | None = None) -> dict:
     """Run the full news intelligence pipeline.
-    
+
     Args:
         force: Skip dedup (re-process all articles)
         text_only: Skip TTS and audio generation
         no_deliver: Skip Telegram delivery (save locally only)
-    
+        deliver_at: Wait until HH:MM before running (e.g. "07:30")
+
     Returns:
         Dict with pipeline results (articles, word_count, runtime, etc.)
     """
+    # Wait until target time if specified
+    if deliver_at:
+        _wait_until(deliver_at)
+
     start_time = time.time()
     log.info("=" * 60)
     log.info("AI News Agent — Pipeline Starting")
@@ -93,7 +133,7 @@ def run_pipeline(force: bool = False, text_only: bool = False, no_deliver: bool 
         log.info(f"Step 4/6: {deep_read_ok} articles deep-read successfully")
 
         # Step 5: Synthesize briefing
-        log.info("Step 5/6: Synthesizing briefing with {MODEL_SYNTHESIS}...")
+        log.info(f"Step 5/6: Synthesizing briefing with {MODEL_SYNTHESIS}...")
         briefing_text = synthesize_briefing(articles)
         word_count = len(briefing_text.split())
         log.info(f"Step 5/6: Briefing generated — {word_count} words")
@@ -117,10 +157,12 @@ def run_pipeline(force: bool = False, text_only: bool = False, no_deliver: bool 
         # Deliver
         if not no_deliver:
             log.info("Delivering briefing to Telegram...")
+            noteworthy_count = sum(1 for a in articles if a.get("priority") in ("HIGH", "MEDIUM"))
             success = deliver_briefing(
                 text=briefing_text,
                 audio_path=audio_path,
                 caption=f"📰 News Briefing — {datetime.now().strftime('%H:%M')} UTC",
+                noteworthy_count=noteworthy_count,
             )
             log.info(f"Delivery {'succeeded' if success else 'failed'}")
         else:
@@ -167,6 +209,8 @@ def main():
     parser.add_argument("--force", action="store_true", help="Skip dedup — re-process all articles")
     parser.add_argument("--text-only", action="store_true", help="Generate text only, skip TTS")
     parser.add_argument("--no-deliver", action="store_true", help="Skip Telegram delivery")
+    parser.add_argument("--deliver-at", metavar="HH:MM", default=None,
+                        help="Wait until target time (e.g. 07:30) before running pipeline")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
     args = parser.parse_args()
 
@@ -198,6 +242,7 @@ def main():
         force=args.force,
         text_only=args.text_only,
         no_deliver=args.no_deliver,
+        deliver_at=args.deliver_at,
     )
     print(f"\nPipeline result: {result.get('status', 'unknown')}")
     if result.get("word_count"):
