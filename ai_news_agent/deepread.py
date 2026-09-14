@@ -3,6 +3,7 @@
 import logging
 import re
 import ssl
+from urllib.parse import urlparse
 import time
 import urllib.request
 import urllib.error
@@ -14,6 +15,31 @@ from .config import MAX_DEEP_READ
 log = logging.getLogger("ai_news_agent")
 
 # Browser-like user agent to avoid blocks
+# Hosts that must never be fetched on behalf of feed content. Feed URLs are
+# attacker-influenced, so an unrestricted fetch is an SSRF primitive against the
+# loopback interface, private ranges, and cloud metadata endpoints.
+_BLOCKED_HOSTS = re.compile(
+    r"^(localhost|127\.|0\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|\[?::1\]?$|metadata\.)",
+    re.I,
+)
+
+
+def is_safe_fetch_url(url: str) -> bool:
+    """True when ``url`` is a plain http(s) URL to a public host."""
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False
+    if parsed.scheme not in ("http", "https"):
+        return False
+    host = (parsed.hostname or "").strip()
+    if not host or "." not in host:
+        return False
+    if _BLOCKED_HOSTS.match(host):
+        return False
+    return True
+
+
 BROWSER_UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
@@ -30,13 +56,18 @@ def deep_read_article(url: str, timeout: int = 20) -> dict | None:
     
     Returns dict with 'text', 'method', 'word_count' or None on failure.
     """
+    # Refuse internal/unsafe targets before any network access (SSRF guard).
+    if not is_safe_fetch_url(url):
+        log.debug(f"refusing to deep-read unsafe url: {url}")
+        return None
+
     # Strategy 1: requests with browser UA
     try:
         resp = requests.get(
             url,
             headers={"User-Agent": BROWSER_UA},
             timeout=timeout,
-            verify=False,  # SSL fallback
+            verify=True,  # verify TLS; an unverified fetch could be tampered with
         )
         resp.raise_for_status()
         html = resp.text
@@ -83,7 +114,8 @@ def deep_read_article(url: str, timeout: int = 20) -> dict | None:
         try:
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
+            ctx.check_hostname = True
+            ctx.verify_mode = ssl.CERT_REQUIRED
             req = urllib.request.Request(url, headers={"User-Agent": BROWSER_UA})
             resp = urllib.request.urlopen(req, timeout=timeout, context=ctx)
             html = resp.read().decode("utf-8", errors="replace")

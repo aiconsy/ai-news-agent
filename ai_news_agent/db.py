@@ -152,8 +152,14 @@ def save_briefing(text_path: str, audio_path: str, word_count: int, runtime_seco
         conn.close()
 
 
-def cleanup_old(hours: int | None = 0) -> int:
-    """Remove headlines older than the given hours. Returns count deleted."""
+def cleanup_old(hours: int | None = None) -> int:
+    """Remove headlines older than the given hours. Returns count deleted.
+
+    Defaults to 2x the dedup window. It must never default to 0: a zero-hour
+    cutoff means "everything seen before right now", so every successful run
+    wiped the whole seen-headlines table and cross-run deduplication stopped
+    working (the same headlines were re-announced every run).
+    """
     if hours is None:
         hours = DEDUP_HOURS * 2  # Keep 2x dedup window
     conn = _get_conn()

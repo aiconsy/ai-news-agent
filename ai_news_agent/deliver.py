@@ -38,7 +38,10 @@ def send_text(text: str, chat_id: str | None = None, token: str | None = None) -
             payload = {
                 "chat_id": chat_id,
                 "text": chunk,
-                "parse_mode": "HTML",
+                # Briefing text is Markdown (**bold**), and article titles are
+                # arbitrary. Sending it as HTML both ignored the formatting and
+                # risked a 400 on any stray < > &. Plain text always delivers.
+                "parse_mode": "Markdown",
             }
             resp = requests.post(url, json=payload, timeout=30)
             resp.raise_for_status()
@@ -132,6 +135,16 @@ def _split_message(text: str, max_length: int = 4096) -> list[str]:
     current_chunk = ""
 
     for paragraph in paragraphs:
+        # A single paragraph can itself exceed the limit; splitting only on
+        # paragraph breaks would emit it unchanged and Telegram would reject the
+        # whole chunk, silently losing that part of the briefing.
+        while len(paragraph) > max_length:
+            if current_chunk:
+                chunks.append(current_chunk)
+                current_chunk = ""
+            chunks.append(paragraph[:max_length])
+            paragraph = paragraph[max_length:]
+
         if len(current_chunk) + len(paragraph) + 2 > max_length:
             if current_chunk:
                 chunks.append(current_chunk)

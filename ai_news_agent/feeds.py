@@ -55,7 +55,10 @@ def _fetch_raw(url: str, timeout: int = 15) -> bytes | None:
         })
         context = ssl.create_default_context()
         context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
+        # Certificate verification stays ON. Disabling it let anyone on the path
+        # tamper with feed responses and inject content into the briefing.
+        context.check_hostname = True
+        context.verify_mode = ssl.CERT_REQUIRED
         with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
             return resp.read()
     except urllib.error.HTTPError as e:
