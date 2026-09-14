@@ -1,9 +1,14 @@
-feedparser>=6.0
-trafilatura>=1.6
-readability-lxml>=0.4
-lxml[html_clean]>=5.0
-requests>=2.31
-edge-tts>=6.1
-pydub>=0.25
-python-dotenv>=1.0
-piper-tts>=1.4.0
+# Pinned with upper bounds so a future major release cannot silently break the
+# pipeline. Lower bounds are the versions verified against this code
+# (tests/test_pipeline.py passes; full install resolves cleanly).
+#
+# Rule: >=floor,<next_major. Pre-1.0 packages get <0.(minor+2).
+feedparser>=6.0,<7
+trafilatura>=1.6,<3
+readability-lxml>=0.4,<1
+lxml[html_clean]>=5.0,<7
+requests>=2.31,<3
+edge-tts>=6.1,<8
+pydub>=0.25,<1
+python-dotenv>=1.0,<2
+piper-tts>=1.4,<2
