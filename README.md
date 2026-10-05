@@ -239,3 +239,5 @@ See [LICENSE](LICENSE) for the full text.
 *Brought to you by [AI Consy](https://github.com/AI-Consy) — built with ❤️ and too many RSS feeds*
 
 </div>
+## Built with
+- Python 3.10+, Hermes Agent fleet automation on the AI Consy mesh
