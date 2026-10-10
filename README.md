@@ -4,7 +4,7 @@
 
 **Autonomous hourly news intelligence pipeline**
 
-*Turn 275+ RSS feeds into a concise, podcast-style audio briefing — every hour, fully hands-free.*
+*Turn 220+ RSS feeds into a concise, podcast-style audio briefing — every hour, fully hands-free.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org)
@@ -17,7 +17,7 @@
 ## What It Does
 
 ```
-📰 285+ RSS Feeds         🎧 Audio Briefing
+📰 220+ RSS Feeds         🎧 Audio Briefing
        │                       │
        ▼                       ▼
   ┌─────────┐   ┌──────────┐   ┌──────┐   ┌───────────┐   ┌─────┐
@@ -27,11 +27,11 @@
   └─────────┘   └──────────┘   └──────┘   └───────────┘   └─────┘
 ```
 
-**Pass 1** — Fetch headlines from 275+ RSS feeds, deduplicate (12h rolling window + fuzzy matching), classify by topic and priority.
+**Pass 1** — Fetch recent headlines, drop anything older than 36 hours, collapse duplicate stories, and rank them. Keywords handle the obvious cases; the model only sees a short list of ambiguous headlines.
 
-**Pass 2** — Deep-read the top articles (requests → trafilatura → readability fallback), summarize each with context.
+**Pass 2** — Deep-read the few stories that can make the briefing (requests → trafilatura → readability fallback) and keep a short lead, not the whole article.
 
-**Synthesis** — LLM generates a natural, podcast-length geopolitical briefing (1,500–3,000 words).
+**Synthesis** — One LLM call writes a 700–1,600 word briefing from those leads. If nothing noteworthy is new, the run stops before calling a model.
 
 **Delivery** — Edge-TTS converts to audio (OGG/Opus), sends both text and voice message to Telegram.
 
@@ -39,7 +39,7 @@
 
 - **🆓 Zero-cost operation** — Uses Ollama Cloud subscription models, no per-token charges
 - **🎧 Podcast-style audio** — Natural-sounding TTS briefings delivered as Telegram voice messages
-- **📰 275+ global feeds** — Geopolitics, tech, AI, finance, cybersecurity, science (fully customizable)
+- **📰 220+ global feeds** — Geopolitics, tech, AI, finance, cybersecurity, science (fully customizable)
 - **🔄 Hourly automation** — Run as a cron job or Hermes Agent skill
 - **🧠 Smart dedup** — 12h rolling window + fuzzy matching (0.6 threshold) — no repeated stories
 - **📊 Source tiers** — Reuters/BBC/NYT → Tier 1 (highest trust), everything else → Tier 2–3
@@ -109,16 +109,17 @@ Or add to crontab:
 
 ## 📡 Feed Categories
 
-The included `config/feeds.json` gives you 275+ curated global feeds:
+The included `config/feeds.json` gives you 220 curated feeds:
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| 🌍 World News | 78 | Reuters, BBC, Al Jazeera, NPR, FT, NYT |
-| 💻 Tech & Science | 63 | Ars Technica, The Verge, Wired, MIT Tech Review |
-| 💰 Business & Investment | 39 | Bloomberg, CNBC, The Economist |
+| 🌍 World News | 59 | BBC, Al Jazeera, NPR, FT, NYT |
+| 💻 Tech & Science | 52 | Ars Technica, The Verge, Wired, MIT Tech Review |
+| 💰 Business & Investment | 37 | Bloomberg, CNBC, The Economist |
 | 🪙 Cryptocurrency | 26 | CoinDesk, The Block |
-| 🤖 AI | 17 | AI News, MIT News, Hugging Face Blog |
-| 🔒 Cybersecurity | 27 | Krebs on Security, The Record, Dark Reading |
+| 🌍 Regional | 21 | BBC UK, SRF, Hungary Today |
+| 🤖 AI | 17 | AI News, MIT News, Google AI Blog |
+| 🔒 Cybersecurity | 8 | Krebs on Security, The Record, Dark Reading |
 
 > 🎯 **Your feeds, your rules** — These are defaults. Remove, add, or recategorize feeds in `config/feeds.json` to match your interests.
 
@@ -135,8 +136,12 @@ All settings live in `.env` (see `.env.example` for full docs):
 | `MODEL_SYNTHESIS` | `glm-5.1:cloud` | Briefing synthesis model |
 | `TTS_VOICE` | `en-GB-RyanNeural` | Edge-TTS voice |
 | `TELEGRAM_BOT_TOKEN` | — | From @BotFather |
-| `MAX_DEEP_READ` | `30` | Max articles to deep-read |
+| `MAX_DEEP_READ` | `10` | Max articles to deep-read |
+| `MAX_NOTEWORTHY` | `20` | Max HIGH/MEDIUM stories in the briefing |
 | `DEDUP_HOURS` | `12` | How long to remember headlines |
+| `MAX_ARTICLE_AGE_HOURS` | `36` | Ignore RSS items older than this (`0` disables) |
+| `MAX_LLM_CLASSIFY` | `24` | Ambiguous headlines that may reach the classifier |
+| `MAX_CONTEXT_CHARS` | `12000` | Hard cap on the synthesis prompt |
 | `QUIET_HOUR_START` | `22` | Pause start (24h) |
 | `QUIET_HOUR_END` | `6` | Pause end (24h) |
 
@@ -156,7 +161,7 @@ ai-news-agent/
 │   ├── deliver.py           # Telegram delivery
 │   └── db.py                # SQLite persistence
 ├── config/
-│   └── feeds.json           # 275+ RSS feeds (edit to customize!)
+│   └── feeds.json           # Curated RSS feeds (edit to customize)
 ├── scripts/
 │   └── run_hourly.sh        # Cron wrapper
 ├── tests/

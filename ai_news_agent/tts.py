@@ -6,12 +6,12 @@ binary or model not available.
 
 import logging
 import os
+import re
 import shutil
 import subprocess
-import tempfile
-from pathlib import Path
+from datetime import datetime
 
-from .config import TTS_VOICE, EDGE_TTS_BIN, OUTPUT_DIR
+from .config import EDGE_TTS_BIN, OUTPUT_DIR, TTS_VOICE
 
 log = logging.getLogger("ai_news_agent")
 
@@ -170,7 +170,6 @@ def text_to_speech(text: str, output_path: str | None = None, voice: str | None 
     """
     voice = voice or TTS_VOICE
     if output_path is None:
-        from datetime import datetime
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
         output_path = str(OUTPUT_DIR / f"briefing_{timestamp}.ogg")
 
@@ -195,8 +194,6 @@ def text_to_speech(text: str, output_path: str | None = None, voice: str | None 
 
 def _clean_text_for_tts(text: str) -> str:
     """Clean markdown and special characters for TTS readability."""
-    import re
-
     # Remove markdown headers
     text = re.sub(r'^#{1,6}\s+', '', text, flags=re.MULTILINE)
     # Remove bold/italic markers

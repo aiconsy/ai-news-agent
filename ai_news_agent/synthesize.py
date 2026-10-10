@@ -1,105 +1,148 @@
-"""Briefing synthesis — generate podcast-length news briefing from classified articles.
+"""Briefing synthesis.
 
-v5.2: Intelligence briefing prompt — world news editor for intelligence briefing service.
-Structured sections: World & Geopolitics, Economy & Markets, Technology & Science,
-Cybersecurity, Regional. Strict no-junk rules.
+The model sees a short list of HIGH and MEDIUM stories, each clipped to a
+lead. LOW stories and full article bodies never enter the prompt.
 """
 
-import json
 import logging
+import re
 
-from .config import MODEL_SYNTHESIS, MAX_NOTEWORTHY
 from .classify import _call_llm
+from .config import (
+    MAX_CONTEXT_CHARS,
+    MAX_NOTEWORTHY,
+    MODEL_SYNTHESIS,
+    SYNTHESIS_STORY_CHARS,
+    SYNTHESIS_TIMEOUT,
+)
 
 log = logging.getLogger("ai_news_agent")
 
+INTELLIGENCE_BRIEFING_PROMPT = """You are a world news editor writing an intelligence briefing.
+Include only news a head of government, investor, or strategist still needs next week.
 
-INTELLIGENCE_BRIEFING_PROMPT = """You are a world news editor for an intelligence briefing service. Your audience is a professional who wants HIGH-IMPACT news with LONG-TERM global significance — not hype, drama, sports, gossip, or entertainment.
+Rules:
+- Skip sports, celebrity gossip, entertainment, lifestyle, and opinion.
+- Skip a story that will not matter in a week.
+- Skip a section when you have no story for it.
+- 2-3 sentences per story: what happened, then why it matters.
+- Precise names, numbers, and places. No filler and no "now turning to".
+- 700-1,600 words.
 
-Your job is to produce a concise, professional intelligence briefing from the articles provided below.
-
-STRICT RULES:
-- NO sports
-- NO celebrity gossip
-- NO entertainment
-- NO lifestyle
-- NO opinion pieces
-- If a story won't matter in a week — SKIP IT
-- Only include stories that a world leader, investor, or strategist would need to know
-
-FORMAT:
-Structure the briefing with these sections (skip a section if no relevant articles):
-
+Sections, in this order:
 ## World & Geopolitics
-(Wars, diplomacy, sanctions, treaties, political crises, elections with global impact)
-
 ## Economy & Markets
-(Market movements, central bank decisions, trade, inflation, recession signals)
-
 ## Technology & Science
-(AI breakthroughs, semiconductors, quantum, space, major research, cyber policy)
-
 ## Cybersecurity
-(Cyberattacks, data breaches, zero-days, state-sponsored operations, cyber policy)
-
 ## Regional
-(Important regional developments — Switzerland, UK, Hungary, Romania, and other regional news)
+Regional means developments in the UK, Switzerland, Hungary, Romania, and other local news with wider consequences.
 
-WRITING STYLE:
-- Be concise and factual — 2-4 sentences per story
-- Lead with the most important developments
-- Provide context on WHY it matters, not just WHAT happened
-- Use bullet points within sections for readability
-- Write 800-2,000 words total
-- No filler, no fluff, no transitions like "Now turning to..." — just the news
-- Be precise with numbers, names, and locations
+Stories are ranked. Prefer earlier items and higher tiers when you must cut."""
 
-Produce the briefing from these articles:"""
+_SENTENCE_END = re.compile(r"[.!?](?:\s|$)")
 
 
-def synthesize_briefing(articles: list[dict]) -> str:
-    """Generate a podcast-length briefing from classified articles.
+def extractive_lead(text: str, max_chars: int = SYNTHESIS_STORY_CHARS) -> str:
+    """First sentence or two, clipped, with whitespace collapsed."""
+    cleaned = re.sub(r"\s+", " ", text or "").strip()
+    if len(cleaned) <= max_chars:
+        return cleaned
+    window = cleaned[:max_chars]
+    match = None
+    for candidate in _SENTENCE_END.finditer(window):
+        if candidate.end() >= max_chars // 2:
+            match = candidate
+            break
+    if match:
+        return window[: match.end()].strip()
+    trimmed = window.rsplit(" ", 1)[0]
+    return f"{trimmed}…" if trimmed else window
 
-    Takes the top MAX_NOTEWORTHY articles, formats them as context,
-    and calls the synthesis LLM to generate a natural briefing.
-    """
-    # Select top articles
-    top_articles = articles[:MAX_NOTEWORTHY]
 
-    # Format articles for LLM context
-    context_parts = []
-    for i, article in enumerate(top_articles, 1):
-        priority = article.get("priority", "MEDIUM")
-        category = article.get("category", "General")
-        source = article.get("source", "Unknown")
-        title = article.get("title", "Untitled")
-        summary = article.get("summary", "")
-        content = article.get("content", summary)
+def story_blurb(article: dict, limit: int = SYNTHESIS_STORY_CHARS) -> str:
+    """Best short text we already have. Deep-read leads beat RSS decks."""
+    if article.get("deep_read") and article.get("content"):
+        source = article.get("content") or ""
+    elif len((article.get("summary") or "").strip()) >= 80:
+        source = article.get("summary") or ""
+    else:
+        source = article.get("content") or article.get("summary") or ""
+    return extractive_lead(source, limit)
 
-        # Truncate content to keep within context window
-        if len(content) > 800:
-            content = content[:800] + "..."
 
-        context_parts.append(
-            f"[{i}] [{priority}] [{category}] {title}\n"
-            f"    Source: {source}\n"
-            f"    {content}"
+def _rank(article: dict) -> tuple:
+    priority = {"HIGH": 0, "MEDIUM": 1}.get(article.get("priority", ""), 9)
+    category = article.get("category") or ""
+    if "Geopolitics" in category:
+        topic = 0
+    elif "Tech" in category or "Cyber" in category:
+        topic = 1
+    elif "Finance" in category:
+        topic = 2
+    else:
+        topic = 3
+    return (priority, topic, article.get("tier", 3), -(article.get("published_ts") or 0))
+
+
+def select_articles_for_briefing(articles: list[dict]) -> list[dict]:
+    """HIGH and MEDIUM only, geopolitics before routine markets, then the cap."""
+    pool = [article for article in articles if article.get("priority") in ("HIGH", "MEDIUM")]
+    pool.sort(key=_rank)
+    return pool[:MAX_NOTEWORTHY]
+
+
+def build_synthesis_prompt(articles: list[dict]) -> str:
+    """Compact prompt. Stops adding stories once the character budget is spent."""
+    blocks: list[str] = []
+    used = len(INTELLIGENCE_BRIEFING_PROMPT) + 40
+    for index, article in enumerate(select_articles_for_briefing(articles), 1):
+        blurb = story_blurb(article)
+        title = (article.get("title") or "Untitled").replace("\n", " ")
+        block = (
+            f"{index}. [{article.get('priority', 'MEDIUM')}|{article.get('category', 'General')}] "
+            f"{title} ({article.get('source', '?')}, tier {article.get('tier', 3)})\n"
+            f"{blurb}"
         )
+        if blocks and used + len(block) + 2 > MAX_CONTEXT_CHARS:
+            log.info("Context budget reached at %d stories (%d chars)", len(blocks), used)
+            break
+        blocks.append(block)
+        used += len(block) + 2
+    context = "\n\n".join(blocks)
+    return f"{INTELLIGENCE_BRIEFING_PROMPT}\n\n{context}\n\nProduce the briefing now:"
 
-    context = "\n\n".join(context_parts)
-    prompt = f"{INTELLIGENCE_BRIEFING_PROMPT}\n\n{context}\n\nProduce the briefing now:"
 
-    log.info(f"Synthesizing briefing from {len(top_articles)} articles (context: {len(prompt)} chars)")
+def synthesize_briefing(articles: list[dict], stats: dict | None = None) -> str:
+    """Write the briefing. Callers should skip this when the selection is empty."""
+    selected = select_articles_for_briefing(articles)
+    prompt = build_synthesis_prompt(articles)
+    if stats is not None:
+        stats["prompt_chars"] = len(prompt)
+        stats["prompt_tokens_est"] = max(1, len(prompt) // 4)
+        stats["briefing_stories"] = len(selected)
+    log.info(
+        "Synthesizing from %d stories (~%d tokens, %d chars)",
+        len(selected),
+        max(1, len(prompt) // 4),
+        len(prompt),
+    )
 
-    result = _call_llm(prompt, model=MODEL_SYNTHESIS, max_tokens=4096, temperature=0.4)
+    result = _call_llm(
+        prompt,
+        model=MODEL_SYNTHESIS,
+        max_tokens=2200,
+        temperature=0.4,
+        timeout=SYNTHESIS_TIMEOUT,
+    )
+    result = result.strip()
+    if result:
+        return result
 
-    if not result:
-        log.error("Synthesis LLM call failed — no output")
-        # Fallback: generate a simple text summary
-        result = "# News Briefing (Fallback)\n\n"
-        for i, article in enumerate(top_articles, 1):
-            result += f"{i}. **{article.get('title', 'Untitled')}** ({article.get('source', '?')})\n"
-            if article.get("summary"):
-                result += f"   {article['summary'][:200]}\n"
-
-    return result
+    log.error("Synthesis LLM call failed — building a local fallback")
+    lines = ["# News Briefing (Fallback)", ""]
+    for index, article in enumerate(selected, 1):
+        lines.append(f"{index}. **{article.get('title', 'Untitled')}** ({article.get('source', '?')})")
+        blurb = story_blurb(article, 200)
+        if blurb:
+            lines.append(f"   {blurb}")
+    return "\n".join(lines)

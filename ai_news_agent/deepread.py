@@ -1,44 +1,27 @@
-"""Deep-read articles — extract full text via requests+trafilatura+readability."""
+"""Deep-read articles — extract full text via requests, trafilatura, readability."""
 
+import ipaddress
 import logging
 import re
-import ssl
-from urllib.parse import urlparse
 import time
-import urllib.request
-import urllib.error
+from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urljoin, urlparse
 
 import requests
+import trafilatura
+from readability import Document
 
-from .config import MAX_DEEP_READ
+from .config import DEEP_READ_WORKERS, MAX_DEEP_READ
 
 log = logging.getLogger("ai_news_agent")
 
-# Browser-like user agent to avoid blocks
 # Hosts that must never be fetched on behalf of feed content. Feed URLs are
-# attacker-influenced, so an unrestricted fetch is an SSRF primitive against the
-# loopback interface, private ranges, and cloud metadata endpoints.
+# attacker-influenced, so an unrestricted fetch is an SSRF primitive against
+# loopback, private ranges, and cloud metadata endpoints.
 _BLOCKED_HOSTS = re.compile(
     r"^(localhost|127\.|0\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|\[?::1\]?$|metadata\.)",
     re.I,
 )
-
-
-def is_safe_fetch_url(url: str) -> bool:
-    """True when ``url`` is a plain http(s) URL to a public host."""
-    try:
-        parsed = urlparse(url)
-    except Exception:
-        return False
-    if parsed.scheme not in ("http", "https"):
-        return False
-    host = (parsed.hostname or "").strip()
-    if not host or "." not in host:
-        return False
-    if _BLOCKED_HOSTS.match(host):
-        return False
-    return True
-
 
 BROWSER_UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -46,130 +29,145 @@ BROWSER_UA = (
 )
 
 
+def _literal_ip(host: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
+    try:
+        return ipaddress.ip_address(host)
+    except ValueError:
+        pass
+    if host.isdigit():
+        try:
+            return ipaddress.ip_address(int(host))
+        except ValueError:
+            return None
+    if host.lower().startswith("0x"):
+        try:
+            return ipaddress.ip_address(int(host, 16))
+        except ValueError:
+            return None
+    return None
+
+
+def is_safe_fetch_url(url: str) -> bool:
+    """True when `url` is a plain http(s) URL to a public host."""
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False
+    if parsed.scheme not in ("http", "https"):
+        return False
+    host = (parsed.hostname or "").strip().rstrip(".").lower()
+    if not host:
+        return False
+    ip = _literal_ip(host)
+    if ip is not None:
+        return bool(ip.is_global)
+    if "." not in host:
+        return False
+    if host.endswith((".local", ".localhost", ".internal")):
+        return False
+    if _BLOCKED_HOSTS.match(host):
+        return False
+    return True
+
+
+def _fetch_html(url: str, timeout: int) -> str | None:
+    """GET a public page. Each redirect hop is checked again before it is followed."""
+    current = url
+    headers = {"User-Agent": BROWSER_UA}
+    for _hop in range(4):
+        if not is_safe_fetch_url(current):
+            log.debug("refusing unsafe url: %s", current)
+            return None
+        try:
+            resp = requests.get(
+                current,
+                headers=headers,
+                timeout=timeout,
+                verify=True,
+                allow_redirects=False,
+            )
+        except Exception as exc:
+            log.debug("requests failed for %s: %s", current, exc)
+            return None
+        if resp.status_code in (301, 302, 303, 307, 308):
+            location = resp.headers.get("Location")
+            if not location:
+                return None
+            current = urljoin(current, location)
+            continue
+        try:
+            resp.raise_for_status()
+        except Exception as exc:
+            log.debug("status failed for %s: %s", current, exc)
+            return None
+        return resp.text
+    log.debug("too many redirects for %s", url)
+    return None
+
+
 def deep_read_article(url: str, timeout: int = 20) -> dict | None:
     """Extract full article text from a URL.
-    
-    Strategy:
-    1. requests.get() with browser UA
-    2. trafilatura extraction
-    3. readability fallback
-    
+
     Returns dict with 'text', 'method', 'word_count' or None on failure.
     """
-    # Refuse internal/unsafe targets before any network access (SSRF guard).
     if not is_safe_fetch_url(url):
-        log.debug(f"refusing to deep-read unsafe url: {url}")
+        log.debug("refusing to deep-read unsafe url: %s", url)
         return None
 
-    # Strategy 1: requests with browser UA
-    try:
-        resp = requests.get(
-            url,
-            headers={"User-Agent": BROWSER_UA},
-            timeout=timeout,
-            verify=True,  # verify TLS; an unverified fetch could be tampered with
-        )
-        resp.raise_for_status()
-        html = resp.text
-    except Exception as e:
-        log.debug(f"requests failed for {url}: {e}")
-        html = None
-
-    if html:
-        # Strategy 2: trafilatura
-        try:
-            import trafilatura
-            text = trafilatura.extract(html, include_comments=False, include_tables=False)
-            if text and len(text.split()) >= 30:
-                return {
-                    "text": text,
-                    "method": "trafilatura",
-                    "word_count": len(text.split()),
-                }
-        except ImportError:
-            log.warning("trafilatura not installed, falling back to readability")
-        except Exception as e:
-            log.debug(f"trafilatura failed for {url}: {e}")
-
-        # Strategy 3: readability fallback
-        try:
-            from readability import Document
-            doc = Document(html)
-            summary = doc.summary()
-            # Strip HTML tags
-            text = re.sub(r"<[^>]+>", "", summary)
-            if text and len(text.split()) >= 30:
-                return {
-                    "text": text,
-                    "method": "readability",
-                    "word_count": len(text.split()),
-                }
-        except ImportError:
-            pass
-        except Exception as e:
-            log.debug(f"readability failed for {url}: {e}")
-
-    # Strategy 4: urllib fallback (no SSL verification)
+    html = _fetch_html(url, timeout)
     if not html:
-        try:
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.check_hostname = True
-            ctx.verify_mode = ssl.CERT_REQUIRED
-            req = urllib.request.Request(url, headers={"User-Agent": BROWSER_UA})
-            resp = urllib.request.urlopen(req, timeout=timeout, context=ctx)
-            html = resp.read().decode("utf-8", errors="replace")
+        return None
 
-            import trafilatura
-            text = trafilatura.extract(html, include_comments=False, include_tables=False)
-            if text and len(text.split()) >= 30:
-                return {
-                    "text": text,
-                    "method": "trafilatura_urllib",
-                    "word_count": len(text.split()),
-                }
-        except Exception as e:
-            log.debug(f"urllib fallback failed for {url}: {e}")
+    try:
+        text = trafilatura.extract(html, include_comments=False, include_tables=False)
+        if text and len(text.split()) >= 30:
+            return {"text": text, "method": "trafilatura", "word_count": len(text.split())}
+    except Exception as exc:
+        log.debug("trafilatura failed for %s: %s", url, exc)
+
+    try:
+        summary = Document(html).summary()
+        text = re.sub(r"<[^>]+>", "", summary)
+        text = re.sub(r"\s+", " ", text).strip()
+        if text and len(text.split()) >= 30:
+            return {"text": text, "method": "readability", "word_count": len(text.split())}
+    except Exception as exc:
+        log.debug("readability failed for %s: %s", url, exc)
 
     return None
 
 
+def _read_one(article: dict) -> tuple[dict, dict | None]:
+    return article, deep_read_article(article.get("url", ""))
+
+
 def deep_read_articles(articles: list[dict], max_articles: int = 0) -> list[dict]:
-    """Deep-read the top articles by priority and tier.
-    
-    Returns articles with 'content' field populated.
+    """Deep-read the highest-ranked HIGH/MEDIUM stories. Incoming order is kept.
+
+    LOW stories are not fetched. Workers are capped so a slow origin cannot
+    multiply into dozens of hung connections.
     """
     max_articles = max_articles or MAX_DEEP_READ
-    deep_read_count = 0
+    targets = [
+        article
+        for article in articles
+        if article.get("url") and article.get("priority") in ("HIGH", "MEDIUM")
+    ][:max_articles]
+    if not targets:
+        return articles
 
-    # Sort by tier (1=best) then by priority
-    priority_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
-    sorted_articles = sorted(
-        articles,
-        key=lambda a: (a.get("tier", 3), priority_order.get(a.get("priority", "MEDIUM"), 1)),
-    )
+    workers = max(1, min(DEEP_READ_WORKERS, len(targets)))
+    started = time.time()
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        for article, result in executor.map(_read_one, targets):
+            if result:
+                article["content"] = result["text"]
+                article["deep_read"] = 1
+                article["extract_method"] = result["method"]
+            else:
+                article["deep_read"] = 0
+                article["extract_method"] = "failed"
 
-    for article in sorted_articles:
-        if deep_read_count >= max_articles:
-            break
-
-        url = article.get("url", "")
-        if not url:
-            continue
-
-        log.info(f"Deep-reading ({deep_read_count + 1}/{max_articles}): {article.get('title', '?')[:60]}")
-        result = deep_read_article(url)
-
-        if result:
-            article["content"] = result["text"]
-            article["deep_read"] = 1
-            article["extract_method"] = result["method"]
-            deep_read_count += 1
-        else:
-            article["deep_read"] = 0
-            article["extract_method"] = "failed"
-
-        time.sleep(0.5)  # Rate limit
-
-    log.info(f"Deep-read {deep_read_count}/{min(len(articles), max_articles)} articles")
+    ok = sum(1 for article in targets if article.get("deep_read") == 1)
+    log.info("Deep-read %d/%d articles in %.1fs", ok, len(targets), time.time() - started)
     return articles

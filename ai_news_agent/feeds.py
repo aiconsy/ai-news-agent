@@ -1,18 +1,20 @@
 """RSS feed fetching and parsing."""
 
+import calendar
 import json
 import logging
 import re
 import ssl
-import urllib.request
 import urllib.error
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from urllib.parse import urlparse
 
 import feedparser
 
-from .config import FEEDS_PATH, SOURCE_TIERS
+from .config import FEEDS_PATH, MAX_ARTICLE_AGE_HOURS, MAX_ITEMS_PER_FEED, SOURCE_TIERS
 
 log = logging.getLogger("ai_news_agent")
 
@@ -28,8 +30,20 @@ def load_feeds(feeds_path: Path | None = None) -> list[dict]:
     with open(path) as f:
         data = json.load(f)
     feeds = data.get("feeds", data) if isinstance(data, dict) else data
-    log.info(f"Loaded {len(feeds)} feeds from {path}")
-    return feeds
+    unique = []
+    seen_urls: set[str] = set()
+    for feed in feeds:
+        url = (feed.get("url") or "").strip()
+        key = url.rstrip("/")
+        if not key or key in seen_urls:
+            continue
+        seen_urls.add(key)
+        unique.append(feed)
+    dropped = len(feeds) - len(unique)
+    if dropped:
+        log.info(f"Dropped {dropped} duplicate feed URLs")
+    log.info(f"Loaded {len(unique)} feeds from {path}")
+    return unique
 
 
 def classify_source_tier(source_name: str) -> int:
@@ -48,6 +62,10 @@ def _fetch_raw(url: str, timeout: int = 15) -> bytes | None:
     Never let feedparser fetch directly — always pre-fetch with urllib
     so we control timeouts, headers, and SSL behavior.
     """
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        log.warning(f"Skipping non-http feed URL: {url}")
+        return None
     try:
         req = urllib.request.Request(url, headers={
             "User-Agent": USER_AGENT,
@@ -91,7 +109,7 @@ def fetch_feed(url: str, timeout: int = 15) -> list[dict]:
         log.warning(f"Feed error {url}: {d.bozo_exception}")
         return []
 
-    for entry in d.entries[:10]:  # Cap at 10 per feed
+    for entry in d.entries[:MAX_ITEMS_PER_FEED]:
         title = entry.get("title", "").strip()
         link = entry.get("link", "")
         summary = entry.get("summary", entry.get("description", ""))
@@ -101,6 +119,8 @@ def fetch_feed(url: str, timeout: int = 15) -> list[dict]:
 
         # Strip HTML from summary
         summary = re.sub(r"<[^>]+>", "", summary)[:500]
+        published_struct = entry.get("published_parsed") or entry.get("updated_parsed")
+        published_ts = calendar.timegm(published_struct) if published_struct else None
 
         articles.append({
             "title": title,
@@ -108,6 +128,7 @@ def fetch_feed(url: str, timeout: int = 15) -> list[dict]:
             "summary": summary,
             "source": d.feed.get("title", url),
             "published": entry.get("published", entry.get("updated", "")),
+            "published_ts": published_ts,
         })
 
     return articles
@@ -127,6 +148,36 @@ def _fetch_one(feed_config: dict) -> list[dict]:
         article["category"] = category
         article["tier"] = tier
     return articles
+
+
+def filter_fresh(
+    articles: list[dict],
+    max_age_hours: int | None = None,
+    now: datetime | None = None,
+) -> list[dict]:
+    """Drop items older than the age window. Undated items are kept.
+
+    A zero or negative window disables the filter. Dated items more than an
+    hour in the future are dropped as clock-skew junk.
+    """
+    if max_age_hours is None:
+        max_age_hours = MAX_ARTICLE_AGE_HOURS
+    if max_age_hours <= 0:
+        return list(articles)
+
+    now_ts = (now or datetime.now(timezone.utc)).timestamp()
+    max_age = max_age_hours * 3600
+    kept = []
+    dropped = 0
+    for article in articles:
+        published_ts = article.get("published_ts")
+        if published_ts and (now_ts - published_ts > max_age or published_ts - now_ts > 3600):
+            dropped += 1
+            continue
+        kept.append(article)
+    if dropped:
+        log.info(f"Age filter: dropped {dropped} articles older than {max_age_hours}h")
+    return kept
 
 
 def fetch_all_feeds(feeds: list[dict], delay: float = 0.0) -> list[dict]:

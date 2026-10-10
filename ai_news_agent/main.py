@@ -6,24 +6,28 @@ until target time.
 
 import argparse
 import logging
-import sqlite3
 import sys
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from .config import (
-    QUIET_HOUR_START, QUIET_HOUR_END, OUTPUT_DIR, LOG_DIR,
-    MODEL_SYNTHESIS,
-)
-from .feeds import load_feeds, fetch_all_feeds
-from .dedup import deduplicate_articles
-from .deepread import deep_read_articles
+from . import __version__
 from .classify import classify_articles
-from .synthesize import synthesize_briefing
-from .tts import text_to_speech
+from .config import (
+    LOG_DIR,
+    MODEL_SYNTHESIS,
+    OUTPUT_DIR,
+    QUIET_HOUR_END,
+    QUIET_HOUR_START,
+)
+from .db import _get_conn, cleanup_old, save_briefing
+from .dedup import cluster_articles, deduplicate_articles
+from .deepread import deep_read_articles
 from .deliver import deliver_briefing
-from .db import save_briefing, cleanup_old, _get_conn
+from .feeds import fetch_all_feeds, filter_fresh, load_feeds
+from .synthesize import select_articles_for_briefing, synthesize_briefing
+from .tts import text_to_speech
 
 log = logging.getLogger("ai_news_agent")
 
@@ -69,7 +73,12 @@ def _wait_until(target_hhmm: str) -> None:
     log.info(f"Reached target time {target.strftime('%H:%M')} — proceeding with pipeline")
 
 
-def run_pipeline(force: bool = False, text_only: bool = False, no_deliver: bool = False, deliver_at: str | None = None) -> dict:
+def run_pipeline(
+    force: bool = False,
+    text_only: bool = False,
+    no_deliver: bool = False,
+    deliver_at: str | None = None,
+) -> dict:
     """Run the full news intelligence pipeline.
 
     Args:
@@ -112,29 +121,53 @@ def run_pipeline(force: bool = False, text_only: bool = False, no_deliver: bool 
             log.warning("No articles fetched — producing minimal briefing")
             return {"status": "no_articles", "runtime_seconds": time.time() - start_time}
 
-        # Step 2: Deduplicate
-        log.info("Step 2/6: Deduplicating articles...")
         if not force:
+            articles = filter_fresh(articles)
+        log.info(f"Step 1/6: {len(articles)} articles inside the age window")
+
+        # Step 2: Deduplicate. --force still collapses same-run copies so the
+        # model is not handed twenty versions of one headline.
+        log.info("Step 2/6: Deduplicating articles...")
+        if force:
+            articles, _suppressed = cluster_articles(articles)
+        else:
             articles = deduplicate_articles(articles, conn)
         log.info(f"Step 2/6: {len(articles)} unique articles after dedup")
 
+        if not articles:
+            deleted = cleanup_old()
+            log.info("No new articles after dedup — skipping LLM (%d old headlines cleaned)", deleted)
+            return {"status": "no_new_articles", "runtime_seconds": time.time() - start_time}
+
         # Step 3: Classify
         log.info("Step 3/6: Classifying articles...")
-        articles = classify_articles(articles)
+        stats: dict = {}
+        articles = classify_articles(articles, stats=stats)
         high_count = sum(1 for a in articles if a.get("priority") == "HIGH")
         med_count = sum(1 for a in articles if a.get("priority") == "MEDIUM")
         low_count = sum(1 for a in articles if a.get("priority") == "LOW")
         log.info(f"Step 3/6: {high_count} HIGH, {med_count} MEDIUM, {low_count} LOW")
 
-        # Step 4: Deep read
+        selected = select_articles_for_briefing(articles)
+        if not selected:
+            deleted = cleanup_old()
+            log.info("No noteworthy stories — skipping synthesis (%d old headlines cleaned)", deleted)
+            return {
+                "status": "nothing_noteworthy",
+                "articles": len(articles),
+                "runtime_seconds": time.time() - start_time,
+                "llm_classify_articles": stats.get("llm_classify_articles", 0),
+            }
+
+        # Step 4: Deep read only the stories that can make the briefing.
         log.info("Step 4/6: Deep-reading top articles...")
-        articles = deep_read_articles(articles)
-        deep_read_ok = sum(1 for a in articles if a.get("deep_read") == 1)
+        deep_read_articles(selected)
+        deep_read_ok = sum(1 for a in selected if a.get("deep_read") == 1)
         log.info(f"Step 4/6: {deep_read_ok} articles deep-read successfully")
 
         # Step 5: Synthesize briefing
         log.info(f"Step 5/6: Synthesizing briefing with {MODEL_SYNTHESIS}...")
-        briefing_text = synthesize_briefing(articles)
+        briefing_text = synthesize_briefing(selected, stats=stats)
         word_count = len(briefing_text.split())
         log.info(f"Step 5/6: Briefing generated — {word_count} words")
 
@@ -157,11 +190,11 @@ def run_pipeline(force: bool = False, text_only: bool = False, no_deliver: bool 
         # Deliver
         if not no_deliver:
             log.info("Delivering briefing to Telegram...")
-            noteworthy_count = sum(1 for a in articles if a.get("priority") in ("HIGH", "MEDIUM"))
+            noteworthy_count = len(selected)
             success = deliver_briefing(
                 text=briefing_text,
                 audio_path=audio_path,
-                caption=f"📰 News Briefing — {datetime.now().strftime('%H:%M')} UTC",
+                caption=f"📰 News Briefing — {datetime.now(timezone.utc).strftime('%H:%M')} UTC",
                 noteworthy_count=noteworthy_count,
             )
             log.info(f"Delivery {'succeeded' if success else 'failed'}")
@@ -175,7 +208,7 @@ def run_pipeline(force: bool = False, text_only: bool = False, no_deliver: bool 
             audio_path=audio_path or "",
             word_count=word_count,
             runtime_seconds=runtime,
-            articles_count=len(articles),
+            articles_count=len(selected),
         )
 
         # Cleanup old headlines
@@ -183,15 +216,23 @@ def run_pipeline(force: bool = False, text_only: bool = False, no_deliver: bool 
         if deleted:
             log.info(f"Cleaned up {deleted} old headlines")
 
-        log.info(f"Pipeline complete in {runtime:.1f}s — {word_count} words, {len(articles)} articles")
+        log.info(
+            "Pipeline complete in %.1fs — %d words, %d stories, ~%d prompt tokens",
+            runtime,
+            word_count,
+            len(selected),
+            stats.get("prompt_tokens_est", 0),
+        )
         return {
             "status": "success",
-            "articles": len(articles),
+            "articles": len(selected),
             "word_count": word_count,
             "audio": audio_path is not None,
             "text_path": text_path,
             "audio_path": audio_path,
             "runtime_seconds": runtime,
+            "llm_classify_articles": stats.get("llm_classify_articles", 0),
+            "prompt_tokens_est": stats.get("prompt_tokens_est", 0),
         }
 
     except Exception as e:
@@ -206,7 +247,11 @@ def main():
     parser = argparse.ArgumentParser(description="AI News Agent — Hourly news intelligence pipeline")
     parser.add_argument("command", nargs="?", default="run", choices=["run", "fetch", "version"],
                         help="Command to run (default: run)")
-    parser.add_argument("--force", action="store_true", help="Skip dedup — re-process all articles")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Ignore quiet hours, the age window, and cross-run dedup",
+    )
     parser.add_argument("--text-only", action="store_true", help="Generate text only, skip TTS")
     parser.add_argument("--no-deliver", action="store_true", help="Skip Telegram delivery")
     parser.add_argument("--deliver-at", metavar="HH:MM", default=None,
@@ -217,17 +262,23 @@ def main():
     # Setup logging
     level = logging.DEBUG if args.verbose else logging.INFO
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+    file_handler = RotatingFileHandler(
+        LOG_DIR / "ai_news_agent.log",
+        mode="a",
+        maxBytes=2_000_000,
+        backupCount=3,
+        encoding="utf-8",
+    )
     logging.basicConfig(
         level=level,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         handlers=[
-            logging.FileHandler(LOG_DIR / "ai_news_agent.log", mode="a"),
+            file_handler,
             logging.StreamHandler(sys.stdout),
         ],
     )
 
     if args.command == "version":
-        from . import __version__
         print(f"ai-news-agent v{__version__}")
         return
 

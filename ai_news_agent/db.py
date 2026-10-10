@@ -1,20 +1,16 @@
-"""Database layer
-
-from __future__ import annotations — SQLite for headlines dedup and article tracking."""
+"""SQLite storage for headline dedup, articles, and briefing history."""
 
 import hashlib
-import json
 import sqlite3
-from datetime import datetime, timezone, timedelta
-from pathlib import Path
-from difflib import SequenceMatcher
+from datetime import datetime, timedelta, timezone
 
-from .config import DB_PATH, DEDUP_HOURS, DEDUP_THRESHOLD
+from .config import DB_PATH, DEDUP_HOURS
 
 
 def _get_conn() -> sqlite3.Connection:
     """Get a connection to the news database, creating tables if needed."""
     conn = sqlite3.connect(str(DB_PATH))
+    conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS headlines_seen (
             url_hash TEXT PRIMARY KEY,
@@ -50,6 +46,7 @@ def _get_conn() -> sqlite3.Connection:
             articles_count INTEGER
         )
     """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_headlines_seen_at ON headlines_seen(seen_at)")
     conn.commit()
     return conn
 
@@ -68,7 +65,6 @@ def is_duplicate(title: str, conn: sqlite3.Connection | None = None) -> bool:
         close = True
     try:
         cutoff = (datetime.now(timezone.utc) - timedelta(hours=DEDUP_HOURS)).isoformat()
-        # Exact hash match
         url_hash = _title_hash(title)
         row = conn.execute(
             "SELECT 1 FROM headlines_seen WHERE url_hash = ? AND seen_at > ?",
@@ -76,12 +72,15 @@ def is_duplicate(title: str, conn: sqlite3.Connection | None = None) -> bool:
         ).fetchone()
         if row:
             return True
-        # Fuzzy match against recent headlines
+        # Local import: dedup imports this module at load, so a top-level import cycles.
+        from .dedup import _similar, _tokens
+
         recent = conn.execute(
             "SELECT title FROM headlines_seen WHERE seen_at > ?", (cutoff,)
         ).fetchall()
+        tokens = _tokens(title)
         for (existing,) in recent:
-            if SequenceMatcher(None, title.lower(), existing.lower()).ratio() >= DEDUP_THRESHOLD:
+            if _similar(tokens, _tokens(existing)):
                 return True
         return False
     finally:
@@ -89,8 +88,19 @@ def is_duplicate(title: str, conn: sqlite3.Connection | None = None) -> bool:
             conn.close()
 
 
-def mark_seen(title: str, url: str = "", category: str = "", priority: str = "MEDIUM", conn: sqlite3.Connection | None = None) -> None:
-    """Record a headline as seen."""
+def mark_seen(
+    title: str,
+    url: str = "",
+    category: str = "",
+    priority: str = "MEDIUM",
+    conn: sqlite3.Connection | None = None,
+) -> None:
+    """Record a headline as seen, refreshing the timestamp if it was seen before.
+
+    INSERT OR IGNORE left the original seen_at in place, so after the dedup
+    window expired the row still existed, the insert was ignored, and the same
+    headline was treated as new on every later run.
+    """
     close = False
     if conn is None:
         conn = _get_conn()
@@ -98,8 +108,14 @@ def mark_seen(title: str, url: str = "", category: str = "", priority: str = "ME
     try:
         url_hash = _title_hash(title)
         conn.execute(
-            """INSERT OR IGNORE INTO headlines_seen (url_hash, title, url, seen_at, category, priority)
-               VALUES (?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO headlines_seen (url_hash, title, url, seen_at, category, priority)
+               VALUES (?, ?, ?, ?, ?, ?)
+               ON CONFLICT(url_hash) DO UPDATE SET
+                   title = excluded.title,
+                   url = excluded.url,
+                   seen_at = excluded.seen_at,
+                   category = excluded.category,
+                   priority = excluded.priority""",
             (url_hash, title, url, datetime.now(timezone.utc).isoformat(), category, priority),
         )
         conn.commit()
@@ -138,14 +154,27 @@ def save_article(article: dict, conn: sqlite3.Connection | None = None) -> None:
             conn.close()
 
 
-def save_briefing(text_path: str, audio_path: str, word_count: int, runtime_seconds: float, articles_count: int) -> None:
+def save_briefing(
+    text_path: str,
+    audio_path: str,
+    word_count: int,
+    runtime_seconds: float,
+    articles_count: int,
+) -> None:
     """Record a completed briefing."""
     conn = _get_conn()
     try:
         conn.execute(
             """INSERT INTO briefings (timestamp, text_path, audio_path, word_count, runtime_seconds, articles_count)
                VALUES (?, ?, ?, ?, ?, ?)""",
-            (datetime.now(timezone.utc).isoformat(), text_path, audio_path, word_count, runtime_seconds, articles_count),
+            (
+                datetime.now(timezone.utc).isoformat(),
+                text_path,
+                audio_path,
+                word_count,
+                runtime_seconds,
+                articles_count,
+            ),
         )
         conn.commit()
     finally:
@@ -161,7 +190,7 @@ def cleanup_old(hours: int | None = None) -> int:
     working (the same headlines were re-announced every run).
     """
     if hours is None:
-        hours = DEDUP_HOURS * 2  # Keep 2x dedup window
+        hours = DEDUP_HOURS * 2
     conn = _get_conn()
     try:
         cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()

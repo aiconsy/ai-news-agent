@@ -4,7 +4,6 @@ v5.2: Silent rule — if briefing is empty, no delivery. noteworthy_count
 parameter to track how many HIGH/MEDIUM articles were included.
 """
 
-import json
 import logging
 from pathlib import Path
 
@@ -31,25 +30,46 @@ def send_text(text: str, chat_id: str | None = None, token: str | None = None) -
     # Split into chunks (Telegram limit is 4096 chars per message)
     chunks = _split_message(text, max_length=4096)
     success = True
+    url = TELEGRAM_API.format(token=token, method="sendMessage")
 
     for i, chunk in enumerate(chunks):
-        try:
-            url = TELEGRAM_API.format(token=token, method="sendMessage")
-            payload = {
-                "chat_id": chat_id,
-                "text": chunk,
-                # Briefing text is Markdown (**bold**), and article titles are
-                # arbitrary. Sending it as HTML both ignored the formatting and
-                # risked a 400 on any stray < > &. Plain text always delivers.
-                "parse_mode": "Markdown",
-            }
-            resp = requests.post(url, json=payload, timeout=30)
-            resp.raise_for_status()
-        except Exception as e:
-            log.error(f"Failed to send text chunk {i+1}/{len(chunks)}: {e}")
-            success = False
+        # Markdown first so **bold** survives. A stray character in a title
+        # makes Telegram return 400; retry that chunk as plain text. Other
+        # failures are not retried, so a timeout cannot deliver the chunk twice.
+        # The exception text is not logged: requests includes the bot token URL.
+        ok, status = _post_text(url, chat_id, chunk, "Markdown")
+        if ok:
+            continue
+        if status == 400 and _post_text(url, chat_id, chunk, None)[0]:
+            continue
+        log.error("Failed to send text chunk %d/%d", i + 1, len(chunks))
+        success = False
 
     return success
+
+
+def _http_failure(exc: Exception) -> str:
+    """Status and body only. Request exceptions embed the bot token in the URL."""
+    response = getattr(exc, "response", None)
+    if response is not None:
+        body = (getattr(response, "text", "") or "")[:180]
+        return f"HTTP {response.status_code}: {body}"
+    return exc.__class__.__name__
+
+
+def _post_text(url: str, chat_id: str, text: str, parse_mode: str | None) -> tuple[bool, int | None]:
+    payload: dict = {"chat_id": chat_id, "text": text}
+    if parse_mode:
+        payload["parse_mode"] = parse_mode
+    try:
+        resp = requests.post(url, json=payload, timeout=30)
+        resp.raise_for_status()
+        return True, resp.status_code
+    except Exception as exc:
+        response = getattr(exc, "response", None)
+        status = response.status_code if response is not None else None
+        log.warning("Telegram sendMessage failed (%s): %s", parse_mode or "plain", _http_failure(exc))
+        return False, status
 
 
 def send_audio(audio_path: str, chat_id: str | None = None, token: str | None = None, caption: str = "") -> bool:
@@ -79,8 +99,8 @@ def send_audio(audio_path: str, chat_id: str | None = None, token: str | None = 
             resp.raise_for_status()
         log.info(f"Audio sent to Telegram: {audio_path}")
         return True
-    except Exception as e:
-        log.error(f"Failed to send audio: {e}")
+    except Exception as exc:
+        log.error("Failed to send audio: %s", _http_failure(exc))
         return False
 
 

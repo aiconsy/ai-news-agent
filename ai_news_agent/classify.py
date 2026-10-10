@@ -1,384 +1,370 @@
-"""LLM classification and summarization — Ollama primary, OpenRouter fallback.
+"""Topic and priority ranking.
 
-v5.2: Keyword pre-classification BEFORE batch LLM. Junk keywords auto-LOW,
-important keywords auto-HIGH/MEDIUM. Only ambiguous articles go to LLM.
-Batch LLM in groups of 15.
+Obvious stories are ranked with word-boundary keywords. Only a capped set of
+ambiguous headlines is sent to a model, in short batches, so a busy hour
+cannot turn into hundreds of classification calls.
 """
 
-import json
 import logging
 import re
-import time
 
 import requests
 
 from .config import (
-    LLM_BASE_URL, LLM_API_KEY, MODEL_CLASSIFY, MODEL_SUMMARIZE,
-    FALLBACK_BASE_URL, FALLBACK_API_KEY, FALLBACK_MODELS,
-    OLLAMA_TIMEOUT, OLLAMA_CONNECT_TIMEOUT,
-    GEOPOLITICS_KEYWORDS, TECH_KEYWORDS, FINANCE_KEYWORDS,
+    CLASSIFY_BATCH_SIZE,
+    FALLBACK_API_KEY,
+    FALLBACK_BASE_URL,
+    FALLBACK_MODELS,
+    FINANCE_KEYWORDS,
+    GEOPOLITICS_KEYWORDS,
     HIGH_CAP,
+    LLM_API_KEY,
+    LLM_BASE_URL,
+    MAX_LLM_CLASSIFY,
+    MODEL_CLASSIFY,
+    MODEL_SUMMARIZE,
+    OLLAMA_CONNECT_TIMEOUT,
+    OLLAMA_TIMEOUT,
+    TECH_KEYWORDS,
 )
 
 log = logging.getLogger("ai_news_agent")
 
-# ── Keyword Pre-Classification ────────────────────────────────────────────────
-# Junk keywords: sports, gossip, entertainment → always LOW
+# Sports, gossip, and lifestyle. Matched with word boundaries so "war" does
+# not fire inside "warning" and "ai" does not fire inside "said".
 JUNK_KEYWORDS = [
-    # Sports
     "sports", "football", "basketball", "baseball", "soccer", "tennis",
-    "golf", "hockey", "nfl", "nba", "mlb", "nhl", "olympic", "athlete",
+    "golf", "hockey", "nfl", "nba", "mlb", "nhl", "olympic", "olympics", "athlete",
     "tournament", "championship", "playoff", "super bowl", "world cup",
     "nascar", "f1", "formula 1", "boxing", "mma", "ufc", "wrestling",
     "cricket", "rugby", "premier league", "la liga", "champions league",
-    # Celebrity gossip
     "celebrity", "gossip", "kardashian", "hollywood", "red carpet",
-    "celebrity news", "paparazzi", "divorce", "breakup", "dating",
-    "engagement", "wedding", "baby bump", "pregnancy rumor",
-    # Entertainment
-    "entertainment", "movie review", "tv show", "streaming", "netflix",
-    "hulu", "disney+", "box office", "concert", "tour dates",
-    "album release", "music video", "reality tv", "soap opera",
+    "paparazzi", "breakup", "baby bump",
+    "movie review", "tv show", "box office", "concert", "tour dates",
+    "entertainment", "album release", "music video", "reality tv", "soap opera",
     "awards ceremony", "grammy", "oscar", "emmy", "golden globe",
-    "celebrity chef", "cooking show", "game show", "talk show",
-    # Lifestyle
-    "lifestyle", "fashion", "beauty", "skincare", "workout routine",
-    "diet tips", "travel destination", "recipe", "restaurant review",
+    "lifestyle", "fashion", "skincare", "workout routine",
+    "diet tips", "recipe", "restaurant review",
     "home decor", "interior design", "gardening", "parenting tips",
-    "relationship advice", "self-help", "wellness trend",
-    # Product launches (minor)
-    "product launch", "unboxing", "review roundup", "best of",
-    "gift guide", "black friday", "cyber monday", "deal of the day",
+    "relationship advice", "self-help",
+    "unboxing", "gift guide", "black friday", "cyber monday", "deal of the day",
 ]
 
-# Important keywords → HIGH priority
 IMPORTANT_KEYWORDS = {
     "high": [
-        # War & conflict
         "war", "invasion", "military strike", "airstrike", "missile attack",
         "nuclear", "ceasefire", "peace talks", "humanitarian crisis",
         "genocide", "ethnic cleansing", "war crime", "refugee crisis",
         "escalation", "retaliation", "troop deployment", "mobilization",
-        # Geopolitics
         "nato", "un security council", "summit", "sanctions", "embargo",
         "trade war", "tariff", "diplomatic crisis", "expel ambassador",
         "annexation", "sovereignty", "territorial claim", "border dispute",
         "regime change", "coup", "political crisis", "no-confidence",
-        # Economy & markets
         "market crash", "recession", "bank failure", "interest rate",
         "fed decision", "inflation crisis", "currency collapse",
         "sovereign debt", "default", "bailout", "stimulus",
-        # Technology & science
         "breakthrough", "landmark", "first-ever", "major discovery",
         "ai model", "quantum computing", "fusion energy", "semiconductor",
         "cyberattack", "ransomware", "zero-day", "data breach",
-        # Health
         "pandemic", "epidemic", "outbreak", "vaccine", "fda approval",
         "drug recall", "public health emergency",
     ],
     "medium": [
-        # Geopolitics
         "diplomacy", "foreign policy", "treaty", "alliance", "election",
-        "parliament", "congress", "senate", "bill", "legislation",
-        "regulation", "policy", "minister", "secretary",
-        # Economy
-        "gdp", "trade", "investment", "merger", "acquisition",
-        "earnings", "quarterly", "market", "bond", "yield",
+        "parliament", "congress", "senate", "legislation",
+        "regulation", "minister", "secretary",
+        "gdp", "merger", "acquisition", "earnings", "quarterly",
         "inflation", "deflation", "imf", "world bank",
-        # Technology
-        "ai", "artificial intelligence", "machine learning", "llm",
-        "chip", "semiconductor", "platform", "startup", "funding",
-        "privacy", "regulation tech", "blockchain",
-        # Science
-        "research", "study", "climate", "emissions", "satellite",
-        "space", "rocket", "biotech", "genome", "clinical trial",
+        "artificial intelligence", "machine learning", "llm", "openai", "chatgpt",
+        "chip", "semiconductor", "startup", "funding round",
+        "data privacy", "blockchain",
+        "climate", "emissions", "satellite", "rocket", "biotech", "genome",
+        "clinical trial", "ukraine", "gaza", "taiwan",
     ],
 }
 
+_PRIORITY_RE = re.compile(r"\b(HIGH|MEDIUM|LOW|H|M|L)\b", re.I)
+_PRIORITY_MAP = {
+    "HIGH": "HIGH",
+    "H": "HIGH",
+    "MEDIUM": "MEDIUM",
+    "M": "MEDIUM",
+    "LOW": "LOW",
+    "L": "LOW",
+}
+_THINK_RE = re.compile(r"<think>.*?</think>", re.I | re.S)
+
+
+def _compile_keywords(keywords: list[str]) -> list[re.Pattern[str]]:
+    patterns = []
+    for keyword in keywords:
+        parts = [re.escape(part) for part in keyword.lower().split()]
+        patterns.append(re.compile(r"(?<!\w)" + r"\s+".join(parts) + r"(?!\w)"))
+    return patterns
+
+
+_JUNK_PATTERNS = _compile_keywords(JUNK_KEYWORDS)
+_HIGH_PATTERNS = _compile_keywords(IMPORTANT_KEYWORDS["high"])
+_MEDIUM_PATTERNS = _compile_keywords(IMPORTANT_KEYWORDS["medium"])
+_GEO_PATTERNS = _compile_keywords(GEOPOLITICS_KEYWORDS)
+_TECH_PATTERNS = _compile_keywords(TECH_KEYWORDS)
+_FINANCE_PATTERNS = _compile_keywords(FINANCE_KEYWORDS)
+
+
+def _matches_any(text: str, patterns: list[re.Pattern[str]]) -> bool:
+    return any(pattern.search(text) for pattern in patterns)
+
 
 def _keyword_classify(title: str, summary: str = "") -> str | None:
-    """Pre-classify an article using keywords.
-
-    Returns 'LOW', 'HIGH', 'MEDIUM', or None (needs LLM).
-    Checks junk first (→LOW), then high (→HIGH), then medium (→MEDIUM).
-    """
-    text = (title + " " + summary).lower()
-
-    # Check junk first — always LOW
-    for kw in JUNK_KEYWORDS:
-        if kw in text:
-            return "LOW"
-
-    # Check high-priority keywords
-    for kw in IMPORTANT_KEYWORDS["high"]:
-        if kw in text:
-            return "HIGH"
-
-    # Check medium-priority keywords
-    for kw in IMPORTANT_KEYWORDS["medium"]:
-        if kw in text:
-            return "MEDIUM"
-
-    # No keyword match — needs LLM
+    """Return LOW, HIGH, MEDIUM, or None when a model should decide."""
+    text = f"{title} {summary}".lower()
+    if _matches_any(text, _JUNK_PATTERNS):
+        return "LOW"
+    if _matches_any(text, _HIGH_PATTERNS):
+        return "HIGH"
+    if _matches_any(text, _MEDIUM_PATTERNS):
+        return "MEDIUM"
     return None
 
 
 def _detect_category(title: str, summary: str = "") -> str:
-    """Detect article category from keywords."""
-    text = (title + " " + summary).lower()
+    """Label a story from its headline and deck. Feed labels are hints only."""
+    text = f"{title} {summary}".lower()
     cats = []
-    if any(kw in text for kw in GEOPOLITICS_KEYWORDS):
+    if _matches_any(text, _GEO_PATTERNS):
         cats.append("Geopolitics")
-    if any(kw in text for kw in TECH_KEYWORDS):
+    if _matches_any(text, _TECH_PATTERNS):
         cats.append("Tech & AI")
-    if any(kw in text for kw in FINANCE_KEYWORDS):
+    if _matches_any(text, _FINANCE_PATTERNS):
         cats.append("Finance")
     if not cats:
         cats.append("General")
     return ", ".join(cats)
 
 
-def _call_llm(prompt: str, model: str, max_tokens: int = 2048, temperature: float = 0.3, use_fallback: bool = False) -> str:
-    """Call LLM API — Ollama primary, OpenRouter fallback.
+def _uses_openai_payload(url: str) -> bool:
+    """Native Ollama /api/chat ignores max_tokens. /v1 and OpenRouter do not."""
+    lowered = url.lower()
+    return lowered.rstrip("/").endswith("chat/completions") or "openrouter.ai" in lowered or "/v1/" in lowered
 
-    Returns the response text or empty string on failure.
-    """
-    # Try primary (Ollama)
+
+def build_llm_payload(url: str, model: str, prompt: str, max_tokens: int, temperature: float) -> dict:
+    """Build a request body for either native Ollama or an OpenAI-compatible API."""
+    messages = [{"role": "user", "content": prompt}]
+    if _uses_openai_payload(url):
+        return {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "stream": False,
+        }
+    return {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {"temperature": temperature, "num_predict": max_tokens},
+    }
+
+
+def _strip_thinking(text: str) -> str:
+    """Drop chain-of-thought blocks so they are not spoken or classified."""
+    return _THINK_RE.sub("", text).strip()
+
+
+def _response_text(data: dict) -> str:
+    if "message" in data and isinstance(data["message"], dict):
+        return str(data["message"].get("content") or "")
+    choices = data.get("choices")
+    if isinstance(choices, list) and choices:
+        message = choices[0].get("message") or {}
+        return str(message.get("content") or "")
+    return ""
+
+
+def _call_llm(
+    prompt: str,
+    model: str,
+    max_tokens: int = 2048,
+    temperature: float = 0.3,
+    timeout: int | None = None,
+    use_fallback: bool = False,
+) -> str:
+    """Call the primary model, then each configured fallback. Empty string on failure."""
+    read_timeout = timeout or OLLAMA_TIMEOUT
+    request_timeout = (OLLAMA_CONNECT_TIMEOUT, read_timeout)
+
     if not use_fallback:
         try:
-            payload = {
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "stream": False,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-            }
             headers = {"Content-Type": "application/json"}
             if LLM_API_KEY:
                 headers["Authorization"] = f"Bearer {LLM_API_KEY}"
-
             resp = requests.post(
                 LLM_BASE_URL,
-                json=payload,
+                json=build_llm_payload(LLM_BASE_URL, model, prompt, max_tokens, temperature),
                 headers=headers,
-                timeout=OLLAMA_TIMEOUT,
+                timeout=request_timeout,
             )
             resp.raise_for_status()
-            data = resp.json()
+            content = _strip_thinking(_response_text(resp.json()))
+            if content:
+                return content
+            log.warning("Primary LLM returned an empty response (%s)", model)
+        except Exception as exc:
+            log.warning("Primary LLM failed (%s): %s", model, exc.__class__.__name__)
 
-            # Ollama format
-            if "message" in data:
-                return data["message"].get("content", "")
-            # OpenAI-compatible format
-            if "choices" in data:
-                return data["choices"][0].get("message", {}).get("content", "")
-            return str(data)
+    if not FALLBACK_API_KEY or not FALLBACK_MODELS:
+        log.info("No fallback provider configured")
+        return ""
 
-        except Exception as e:
-            log.warning(f"Primary LLM failed ({model}): {e}")
-            if not use_fallback:
-                log.info("Trying fallback provider...")
-
-    # Try fallback (OpenRouter)
-    try:
-        for fb_model in FALLBACK_MODELS:
-            try:
-                payload = {
-                    "model": fb_model,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": max_tokens,
-                    "temperature": temperature,
-                }
-                headers = {
+    for fb_model in FALLBACK_MODELS:
+        try:
+            resp = requests.post(
+                FALLBACK_BASE_URL,
+                json=build_llm_payload(FALLBACK_BASE_URL, fb_model, prompt, max_tokens, temperature),
+                headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {FALLBACK_API_KEY}",
-                }
-                resp = requests.post(
-                    FALLBACK_BASE_URL,
-                    json=payload,
-                    headers=headers,
-                    timeout=OLLAMA_TIMEOUT,
-                )
-                resp.raise_for_status()
-                data = resp.json()
-                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                if content:
-                    return content
-            except Exception as e:
-                log.warning(f"Fallback model {fb_model} failed: {e}")
-                continue
-    except Exception as e:
-        log.error(f"All fallback models failed: {e}")
-
+                },
+                timeout=request_timeout,
+            )
+            resp.raise_for_status()
+            content = _strip_thinking(_response_text(resp.json()))
+            if content:
+                return content
+        except Exception as exc:
+            log.warning("Fallback model %s failed: %s", fb_model, exc.__class__.__name__)
     return ""
 
 
 def _parse_batch_response(response: str, count: int) -> list[str]:
-    """Parse batch LLM response into list of priorities.
-
-    Expected format: one priority per line (HIGH/MEDIUM/LOW).
-    """
-    priorities = []
-    lines = response.strip().split("\n")
-    for line in lines:
-        line = line.strip().upper()
-        # Extract just the priority word
-        for p in ["HIGH", "MEDIUM", "LOW"]:
-            if p in line:
-                priorities.append(p)
-                break
-        if len(priorities) >= count:
-            break
-
-    # Pad if we didn't get enough
-    while len(priorities) < count:
-        priorities.append("MEDIUM")
-
+    """Parse H/M/L (or HIGH/MEDIUM/LOW) lines into exactly `count` priorities."""
+    response = _strip_thinking(response)
+    lines = [line.strip() for line in response.splitlines() if line.strip()]
+    if len(lines) <= 2:
+        found = _PRIORITY_RE.findall(response)
+    else:
+        found = []
+        for line in lines:
+            hits = _PRIORITY_RE.findall(line)
+            if hits:
+                found.append(hits[0])
+    priorities = [_PRIORITY_MAP[token.upper()] for token in found]
+    if len(priorities) < count:
+        priorities.extend(["MEDIUM"] * (count - len(priorities)))
     return priorities[:count]
 
 
-def _batch_llm_classify(articles: list[dict], batch_size: int = 15) -> list[str]:
-    """Classify a list of articles using batch LLM calls.
-
-    Sends articles in batches of 15 to the LLM, which returns
-    HIGH/MEDIUM/LOW for each.
-    """
-    all_priorities = []
-
-    for i in range(0, len(articles), batch_size):
-        batch = articles[i:i + batch_size]
+def _batch_llm_classify(articles: list[dict], batch_size: int = CLASSIFY_BATCH_SIZE) -> list[str]:
+    """Classify a capped list. One letter per story keeps the output tiny."""
+    all_priorities: list[str] = []
+    for start in range(0, len(articles), batch_size):
+        batch = articles[start:start + batch_size]
         lines = []
-        for j, article in enumerate(batch):
-            title = article.get("title", "")[:200]
-            summary = article.get("summary", "")[:300]
-            lines.append(f"{j+1}. {title} | {summary}")
-        numbered = "\n".join(lines)
-
-        prompt = f"""You are a news priority classifier. Classify each article as HIGH, MEDIUM, or LOW.
-
-Rules:
-- HIGH: Major world events, wars, geopolitical crises, market crashes, significant tech breakthroughs, public health emergencies
-- MEDIUM: Important but not urgent — policy changes, routine diplomacy, earnings reports, tech updates
-- LOW: Minor news, local interest, routine updates
-- Sports, celebrity gossip, entertainment, lifestyle, and product launch stories are ALWAYS low.
-
-Articles:
-{numbered}
-
-Respond with one word per line (HIGH, MEDIUM, or LOW). {len(batch)} lines:"""
-
-        result = _call_llm(prompt, model=MODEL_CLASSIFY, max_tokens=512, temperature=0.2)
+        for index, article in enumerate(batch, 1):
+            title = (article.get("title") or "").replace("\n", " ")[:140]
+            summary = (article.get("summary") or "").replace("\n", " ")[:160]
+            lines.append(f"{index}. {title} | {summary}")
+        prompt = (
+            "Rank each item H (must know), M (notable), or L "
+            "(skip: sports, gossip, entertainment, lifestyle, local, routine).\n"
+            "H only for war, crises, major markets, security, or real science/tech breakthroughs.\n"
+            f"Reply with exactly {len(batch)} lines, one of H/M/L, and no other text.\n\n"
+            + "\n".join(lines)
+        )
+        result = _call_llm(
+            prompt,
+            model=MODEL_CLASSIFY,
+            max_tokens=max(32, 6 * len(batch)),
+            temperature=0.0,
+            timeout=min(OLLAMA_TIMEOUT, 45),
+        )
         if result:
-            priorities = _parse_batch_response(result, len(batch))
-            all_priorities.extend(priorities)
+            all_priorities.extend(_parse_batch_response(result, len(batch)))
         else:
-            # LLM failed — default all to MEDIUM
-            all_priorities.extend(["MEDIUM"] * len(batch))
-
+            all_priorities.extend("MEDIUM" if article.get("tier", 3) <= 2 else "LOW" for article in batch)
     return all_priorities
 
 
 def classify_article(title: str, summary: str = "") -> dict:
-    """Classify an article by topic and priority (keyword-only, no LLM).
-
-    Returns dict with 'category', 'priority', 'keywords'.
-    """
-    text = (title + " " + summary).lower()
-
-    matched_cats = []
-    if any(kw in text for kw in GEOPOLITICS_KEYWORDS):
-        matched_cats.append("Geopolitics")
-    if any(kw in text for kw in TECH_KEYWORDS):
-        matched_cats.append("Tech & AI")
-    if any(kw in text for kw in FINANCE_KEYWORDS):
-        matched_cats.append("Finance")
-
-    if not matched_cats:
-        matched_cats.append("General")
-
-    # Determine priority based on keywords and matches
-    priority = "MEDIUM"
-    if "Geopolitics" in matched_cats and any(w in text for w in ["war", "conflict", "nuclear", "invasion", "sanctions"]):
-        priority = "HIGH"
-    elif "Tech & AI" in matched_cats and any(w in text for w in ["breakthrough", "landmark", "major", "first-ever"]):
-        priority = "HIGH"
-    elif len(matched_cats) >= 2:
-        priority = "HIGH"
-
-    return {
-        "category": ", ".join(matched_cats),
-        "priority": priority,
-        "keywords": matched_cats,
-    }
+    """Keyword-only classification, used by tests and offline callers."""
+    priority = _keyword_classify(title, summary) or "MEDIUM"
+    category = _detect_category(title, summary)
+    return {"category": category, "priority": priority, "keywords": category.split(", ")}
 
 
-def classify_articles(articles: list[dict]) -> list[dict]:
-    """Classify all articles by topic and priority.
-
-    v5.2: Keyword pre-classification FIRST, then batch LLM only for
-    articles that keywords couldn't classify.
-    """
-    # Phase 1: Keyword pre-classification
-    needs_llm = []
-    kw_high = 0
-    kw_medium = 0
-    kw_low = 0
+def classify_articles(articles: list[dict], stats: dict | None = None) -> list[dict]:
+    """Rank every article. The model sees only a bounded ambiguous slice."""
+    needs_llm: list[dict] = []
+    counts = {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
 
     for article in articles:
         title = article.get("title", "")
         summary = article.get("summary", "")
-        category = _detect_category(title, summary)
-        article["category"] = category
-
+        article["category"] = _detect_category(title, summary)
         priority = _keyword_classify(title, summary)
+        if priority is None and article.get("tier", 3) == 1:
+            # Wire copy that missed the keyword lists is still worth reading,
+            # and it does not need a model call to say so.
+            priority = "MEDIUM"
         if priority is not None:
             article["priority"] = priority
-            if priority == "HIGH":
-                kw_high += 1
-            elif priority == "MEDIUM":
-                kw_medium += 1
-            else:
-                kw_low += 1
+            counts[priority] += 1
         else:
-            # Needs LLM
             needs_llm.append(article)
 
-    log.info(f"Keyword pre-classify: {kw_high} HIGH, {kw_medium} MEDIUM, {kw_low} LOW, {len(needs_llm)} need LLM")
+    needs_llm.sort(key=lambda article: (article.get("tier", 3), -(article.get("published_ts") or 0)))
+    budget = needs_llm[:MAX_LLM_CLASSIFY]
+    overflow = needs_llm[MAX_LLM_CLASSIFY:]
+    for article in overflow:
+        article["priority"] = "LOW"
+        counts["LOW"] += 1
 
-    # Phase 2: Batch LLM classification for ambiguous articles
-    if needs_llm:
-        llm_priorities = _batch_llm_classify(needs_llm)
-        for article, priority in zip(needs_llm, llm_priorities):
+    log.info(
+        "Keyword pre-classify: %d HIGH, %d MEDIUM, %d LOW, %d go to LLM, %d dropped without LLM",
+        counts["HIGH"],
+        counts["MEDIUM"],
+        counts["LOW"],
+        len(budget),
+        len(overflow),
+    )
+
+    if budget:
+        for article, priority in zip(budget, _batch_llm_classify(budget)):
             article["priority"] = priority
-        log.info(f"LLM classified {len(needs_llm)} articles")
+        log.info("LLM classified %d articles", len(budget))
 
-    # Cap HIGH articles
-    high_count = sum(1 for a in articles if a.get("priority") == "HIGH")
-    if high_count > HIGH_CAP:
-        log.info(f"Capping HIGH articles: {high_count} → {HIGH_CAP}")
-        capped = 0
-        for article in reversed(articles):
-            if article.get("priority") == "HIGH" and capped < (high_count - HIGH_CAP):
-                article["priority"] = "MEDIUM"
-                capped += 1
+    high_articles = [article for article in articles if article.get("priority") == "HIGH"]
+    if len(high_articles) > HIGH_CAP:
+        high_articles.sort(key=lambda article: (article.get("tier", 3), -(len(article.get("summary") or ""))))
+        demoted = 0
+        for article in reversed(high_articles):
+            if demoted >= len(high_articles) - HIGH_CAP:
+                break
+            article["priority"] = "MEDIUM"
+            demoted += 1
+        log.info("Capped HIGH articles: %d → %d", len(high_articles), HIGH_CAP)
 
-    # Sort: HIGH first, then MEDIUM, then LOW; within same priority, lower tier first
     priority_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
-    articles.sort(key=lambda a: (priority_order.get(a.get("priority", "MEDIUM"), 1), a.get("tier", 3)))
-
+    articles.sort(
+        key=lambda article: (
+            priority_order.get(article.get("priority", "LOW"), 2),
+            article.get("tier", 3),
+            -(article.get("published_ts") or 0),
+        )
+    )
+    if stats is not None:
+        stats["llm_classify_articles"] = len(budget)
+        stats["llm_classify_batches"] = (len(budget) + CLASSIFY_BATCH_SIZE - 1) // CLASSIFY_BATCH_SIZE if budget else 0
+        stats["ranked_without_llm"] = len(articles) - len(budget)
     return articles
 
 
 def summarize_article(title: str, content: str, source: str = "") -> str:
-    """Summarize a deep-read article using LLM."""
-    prompt = f"""Summarize this article in 2-3 concise sentences focusing on key facts and implications.
-
-Title: {title}
-Source: {source}
-
-{content[:3000]}
-
-Summary:"""
-
-    result = _call_llm(prompt, model=MODEL_SUMMARIZE, max_tokens=256, temperature=0.2)
+    """Summarize one article. The pipeline uses extractive leads instead."""
+    prompt = (
+        "Summarize in 2 sentences. Facts and why it matters. No preamble.\n\n"
+        f"Title: {title}\nSource: {source}\n\n{content[:2000]}"
+    )
+    result = _call_llm(prompt, model=MODEL_SUMMARIZE, max_tokens=180, temperature=0.2)
     return result.strip() if result else title
