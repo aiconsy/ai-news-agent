@@ -103,5 +103,4 @@ SQLite with three tables:
 
 Run hourly via:
 - **Hermes cron**: `hermes cron create --name "News" --schedule "0 * * * *"`
-- **systemd timer**: See `deploy/ai-news-agent.timer`
 - **crontab**: `0 * * * * /path/to/scripts/run_hourly.sh`

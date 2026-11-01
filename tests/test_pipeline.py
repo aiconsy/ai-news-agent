@@ -12,7 +12,7 @@ from ai_news_agent.classify import (
     build_llm_payload,
     classify_articles,
 )
-from ai_news_agent.config import SOURCE_TIERS
+from ai_news_agent.config import SOURCE_TIERS, resolve_feeds_path
 from ai_news_agent.db import _get_conn, cleanup_old, mark_seen
 from ai_news_agent.dedup import _title_hash, cluster_articles, deduplicate_articles
 from ai_news_agent.deepread import deep_read_article, deep_read_articles, is_safe_fetch_url
@@ -23,9 +23,16 @@ from ai_news_agent.synthesize import build_synthesis_prompt
 from ai_news_agent.tts import _clean_text_for_tts
 
 
+def test_packaged_feeds_are_the_default(monkeypatch):
+    monkeypatch.delenv("FEEDS_PATH", raising=False)
+    path = resolve_feeds_path()
+    assert path.exists()
+    assert len(load_feeds(path)) > 200
+
+
 def test_load_feeds():
     """Feeds file loads and contains expected categories."""
-    feeds_path = Path(__file__).parent.parent / "config" / "feeds.json"
+    feeds_path = Path(__file__).parent.parent / "ai_news_agent" / "data" / "feeds.json"
     feeds = load_feeds(feeds_path)
     assert len(feeds) > 200, f"Expected 200+ feeds, got {len(feeds)}"
     categories = {f["category"] for f in feeds}
@@ -65,7 +72,7 @@ def test_source_tiers_no_personal_info():
 
 def test_feeds_no_regional():
     """Feeds list contains no Hungarian/Romanian/Swiss regional feeds."""
-    feeds_path = Path(__file__).parent.parent / "config" / "feeds.json"
+    feeds_path = Path(__file__).parent.parent / "ai_news_agent" / "data" / "feeds.json"
     feeds = load_feeds(feeds_path)
     regional_cats = {"Hun. News", "Ro. News", "Swiss"}
     for feed in feeds:
@@ -74,7 +81,7 @@ def test_feeds_no_regional():
 
 
 def test_feed_urls_are_unique():
-    feeds = load_feeds(Path(__file__).parent.parent / "config" / "feeds.json")
+    feeds = load_feeds(Path(__file__).parent.parent / "ai_news_agent" / "data" / "feeds.json")
     keys = [(feed.get("url") or "").strip().rstrip("/") for feed in feeds]
     assert len(keys) == len(set(keys))
     assert len(feeds) > 200

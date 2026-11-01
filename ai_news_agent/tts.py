@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 from datetime import datetime
 
-from .config import EDGE_TTS_BIN, OUTPUT_DIR, TTS_VOICE
+from .config import EDGE_TTS_BIN, OUTPUT_DIR, TTS_VOICE, ensure_runtime_dirs
 
 log = logging.getLogger("ai_news_agent")
 
@@ -179,6 +179,7 @@ def text_to_speech(text: str, output_path: str | None = None, voice: str | None 
     Returns path to OGG file or None on failure.
     """
     voice = voice or TTS_VOICE
+    ensure_runtime_dirs()
     if output_path is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
         output_path = str(OUTPUT_DIR / f"briefing_{timestamp}.ogg")

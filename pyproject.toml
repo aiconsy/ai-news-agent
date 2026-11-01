@@ -31,7 +31,6 @@ dependencies = [
     "requests>=2.31,<3",
     "python-dotenv>=1.0,<2",
     "edge-tts>=6.1,<8",
-    "pydub>=0.25,<1",
 ]
 
 [project.optional-dependencies]
@@ -40,6 +39,12 @@ dev = [
     "pytest-cov>=4.0,<8",
     "ruff>=0.1,<1",
 ]
+# Piper is an external binary plus a voice model, set with PIPER_BIN and
+# PIPER_MODEL. The pip package does not include a voice, so it is not installed
+# by default.
+
+[tool.setuptools.package-data]
+ai_news_agent = ["data/*.json"]
 
 [project.scripts]
 ai-news = "ai_news_agent.cli:main"

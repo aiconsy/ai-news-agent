@@ -24,8 +24,16 @@ if [ -f "$PROJECT_DIR/.venv/bin/activate" ]; then
     source "$PROJECT_DIR/.venv/bin/activate"
 fi
 
-# Run the pipeline
+# Run the pipeline. `python` is missing on some hosts; `python3` is the usual name.
 cd "$PROJECT_DIR"
-python -m ai_news_agent.main "$@"
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON=python3
+elif command -v python >/dev/null 2>&1; then
+    PYTHON=python
+else
+    echo "python3 is required" >&2
+    exit 1
+fi
+"$PYTHON" -m ai_news_agent.main "$@"
 
 echo "Pipeline run complete at $(date -u '+%Y-%m-%d %H:%M UTC')"

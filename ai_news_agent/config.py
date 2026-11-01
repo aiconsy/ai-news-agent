@@ -27,15 +27,36 @@ _load_env()
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(os.path.expanduser(os.getenv("BASE_DIR", str(Path.home() / ".ai-news-agent"))))
-CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DB_DIR = BASE_DIR / "db"
 OUTPUT_DIR = BASE_DIR / "output"
 LOG_DIR = BASE_DIR / "logs"
 DB_PATH = DB_DIR / "news_intel.db"
-FEEDS_PATH = CONFIG_DIR / "feeds.json"
+BUNDLED_FEEDS_PATH = Path(__file__).resolve().parent / "data" / "feeds.json"
 
-for d in (DB_DIR, OUTPUT_DIR, LOG_DIR):
-    d.mkdir(parents=True, exist_ok=True)
+
+def resolve_feeds_path() -> Path:
+    """Find the feed list.
+
+    `FEEDS_PATH` wins. A repo checkout's `config/feeds.json` is next, so an
+    existing edit keeps working. Otherwise use the copy shipped in the package.
+    """
+    override = os.getenv("FEEDS_PATH", "").strip()
+    if override:
+        return Path(os.path.expanduser(override))
+    project_copy = PROJECT_ROOT / "config" / "feeds.json"
+    if project_copy.exists():
+        return project_copy
+    return BUNDLED_FEEDS_PATH
+
+
+def ensure_runtime_dirs() -> None:
+    """Create the database, output, and log directories on first real use."""
+    for directory in (DB_DIR, OUTPUT_DIR, LOG_DIR):
+        directory.mkdir(parents=True, exist_ok=True)
+
+
+FEEDS_PATH = resolve_feeds_path()
 
 # ── LLM Configuration ────────────────────────────────────────────────────────
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")

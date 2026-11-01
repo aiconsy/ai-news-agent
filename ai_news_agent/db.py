@@ -9,6 +9,7 @@ from .config import DB_PATH, DEDUP_HOURS
 
 def _get_conn() -> sqlite3.Connection:
     """Get a connection to the news database, creating tables if needed."""
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(DB_PATH))
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("""

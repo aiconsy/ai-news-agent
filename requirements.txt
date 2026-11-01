@@ -9,6 +9,4 @@ readability-lxml>=0.4,<1
 lxml[html_clean]>=5.0,<7
 requests>=2.31,<3
 edge-tts>=6.1,<8
-pydub>=0.25,<1
 python-dotenv>=1.0,<2
-piper-tts>=1.4,<2

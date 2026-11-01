@@ -74,7 +74,7 @@ cp .env.example .env
 #   TELEGRAM_CHAT_ID=your_chat_id
 ```
 
-> 💡 **LLM Provider?** By default, it uses local Ollama. For Ollama Cloud, just change `LLM_BASE_URL`. For OpenRouter, set `FALLBACK_API_KEY`. The default feeds are just starting points — edit `config/feeds.json` to match your interests.
+> 💡 **LLM Provider?** By default, it uses local Ollama. For Ollama Cloud, just change `LLM_BASE_URL`. For OpenRouter, set `FALLBACK_API_KEY`. The default feeds are just starting points — edit `ai_news_agent/data/feeds.json`, or point `FEEDS_PATH` at your own file.
 
 ### Run
 
@@ -109,7 +109,7 @@ Or add to crontab:
 
 ## 📡 Feed Categories
 
-The included `config/feeds.json` gives you 220 curated feeds:
+The included feed list gives you 220 curated feeds:
 
 | Category | Count | Examples |
 |----------|-------|---------|
@@ -121,7 +121,7 @@ The included `config/feeds.json` gives you 220 curated feeds:
 | 🤖 AI | 17 | AI News, MIT News, Google AI Blog |
 | 🔒 Cybersecurity | 8 | Krebs on Security, The Record, Dark Reading |
 
-> 🎯 **Your feeds, your rules** — These are defaults. Remove, add, or recategorize feeds in `config/feeds.json` to match your interests.
+> 🎯 **Your feeds, your rules** — These are defaults. Remove, add, or recategorize feeds in `ai_news_agent/data/feeds.json`, or set `FEEDS_PATH`. An existing `config/feeds.json` is still used when that file is present.
 
 ## ⚙️ Configuration
 
@@ -159,9 +159,8 @@ ai-news-agent/
 │   ├── synthesize.py        # LLM briefing generation
 │   ├── tts.py               # Edge-TTS → OGG audio
 │   ├── deliver.py           # Telegram delivery
-│   └── db.py                # SQLite persistence
-├── config/
-│   └── feeds.json           # Curated RSS feeds (edit to customize)
+│   ├── db.py                # SQLite persistence
+│   └── data/feeds.json      # Curated RSS feeds (edit to customize)
 ├── scripts/
 │   └── run_hourly.sh        # Cron wrapper
 ├── tests/
@@ -200,7 +199,7 @@ python -m ai_news_agent.main
 
 ## 🎨 Adding Custom Feeds
 
-Edit `config/feeds.json`:
+Edit `ai_news_agent/data/feeds.json` (or set `FEEDS_PATH`):
 
 ```json
 {

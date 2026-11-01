@@ -20,6 +20,7 @@ from .config import (
     OUTPUT_DIR,
     QUIET_HOUR_END,
     QUIET_HOUR_START,
+    ensure_runtime_dirs,
 )
 from .db import _get_conn, cleanup_old, mark_seen_many, save_briefing
 from .dedup import cluster_articles, deduplicate_articles
@@ -275,7 +276,7 @@ def main():
 
     # Setup logging
     level = logging.DEBUG if args.verbose else logging.INFO
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    ensure_runtime_dirs()
     file_handler = RotatingFileHandler(
         LOG_DIR / "ai_news_agent.log",
         mode="a",
