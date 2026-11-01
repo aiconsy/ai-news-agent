@@ -21,7 +21,7 @@ from .config import (
     QUIET_HOUR_END,
     QUIET_HOUR_START,
 )
-from .db import _get_conn, cleanup_old, save_briefing
+from .db import _get_conn, cleanup_old, mark_seen_many, save_briefing
 from .dedup import cluster_articles, deduplicate_articles
 from .deepread import deep_read_articles
 from .deliver import deliver_briefing
@@ -42,16 +42,20 @@ def _is_quiet_hours() -> bool:
         return QUIET_HOUR_START <= hour < QUIET_HOUR_END
 
 
-def _wait_until(target_hhmm: str) -> None:
+def _wait_until(target_hhmm: str) -> bool:
     """Sleep until the target time (HH:MM format, local time).
 
     If the target time has already passed today, wait until tomorrow.
+    Returns False when the clock time is not real, so the run does not start early.
     """
     try:
         target_hour, target_minute = map(int, target_hhmm.split(":"))
     except (ValueError, AttributeError):
         log.error(f"Invalid --deliver-at format: {target_hhmm} (expected HH:MM)")
-        return
+        return False
+    if not (0 <= target_hour <= 23 and 0 <= target_minute <= 59):
+        log.error(f"Invalid --deliver-at time: {target_hhmm}")
+        return False
 
     now = datetime.now().astimezone()
     target = now.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
@@ -71,6 +75,7 @@ def _wait_until(target_hhmm: str) -> None:
         time.sleep(sleep_chunk)
 
     log.info(f"Reached target time {target.strftime('%H:%M')} — proceeding with pipeline")
+    return True
 
 
 def run_pipeline(
@@ -91,8 +96,8 @@ def run_pipeline(
         Dict with pipeline results (articles, word_count, runtime, etc.)
     """
     # Wait until target time if specified
-    if deliver_at:
-        _wait_until(deliver_at)
+    if deliver_at and not _wait_until(deliver_at):
+        return {"status": "error", "error": "bad_deliver_at", "runtime_seconds": 0}
 
     start_time = time.time()
     log.info("=" * 60)
@@ -150,8 +155,13 @@ def run_pipeline(
 
         selected = select_articles_for_briefing(articles)
         if not selected:
+            remembered = mark_seen_many(articles, conn)
             deleted = cleanup_old()
-            log.info("No noteworthy stories — skipping synthesis (%d old headlines cleaned)", deleted)
+            log.info(
+                "No noteworthy stories — skipping synthesis (%d remembered, %d old headlines cleaned)",
+                remembered,
+                deleted,
+            )
             return {
                 "status": "nothing_noteworthy",
                 "articles": len(articles),
@@ -210,6 +220,10 @@ def run_pipeline(
             runtime_seconds=runtime,
             articles_count=len(selected),
         )
+        if stats.get("synthesis_fallback"):
+            log.warning("Synthesis fell back to a local list — stories stay unseen for the next run")
+        else:
+            mark_seen_many(articles, conn)
 
         # Cleanup old headlines
         deleted = cleanup_old()

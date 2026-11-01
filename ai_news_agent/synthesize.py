@@ -136,8 +136,12 @@ def synthesize_briefing(articles: list[dict], stats: dict | None = None) -> str:
     )
     result = result.strip()
     if result:
+        if stats is not None:
+            stats["synthesis_fallback"] = False
         return result
 
+    if stats is not None:
+        stats["synthesis_fallback"] = True
     log.error("Synthesis LLM call failed — building a local fallback")
     lines = ["# News Briefing (Fallback)", ""]
     for index, article in enumerate(selected, 1):

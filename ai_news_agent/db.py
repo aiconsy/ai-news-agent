@@ -124,6 +124,52 @@ def mark_seen(
             conn.close()
 
 
+def mark_seen_many(articles: list[dict], conn: sqlite3.Connection | None = None) -> int:
+    """Remember a finished run's headlines in one transaction.
+
+    Dedup must not call this while a run is still in progress. A crash after
+    an early write used to consume the stories, and the next hour skipped them
+    even though no briefing was saved.
+    """
+    close = False
+    if conn is None:
+        conn = _get_conn()
+        close = True
+    try:
+        seen_at = datetime.now(timezone.utc).isoformat()
+        rows = []
+        for article in articles:
+            title = (article.get("title") or "").strip()
+            if not title:
+                continue
+            rows.append((
+                _title_hash(title),
+                title,
+                article.get("url", ""),
+                seen_at,
+                article.get("category", ""),
+                article.get("priority", "MEDIUM"),
+            ))
+        if not rows:
+            return 0
+        conn.executemany(
+            """INSERT INTO headlines_seen (url_hash, title, url, seen_at, category, priority)
+               VALUES (?, ?, ?, ?, ?, ?)
+               ON CONFLICT(url_hash) DO UPDATE SET
+                   title = excluded.title,
+                   url = excluded.url,
+                   seen_at = excluded.seen_at,
+                   category = excluded.category,
+                   priority = excluded.priority""",
+            rows,
+        )
+        conn.commit()
+        return len(rows)
+    finally:
+        if close:
+            conn.close()
+
+
 def save_article(article: dict, conn: sqlite3.Connection | None = None) -> None:
     """Save or update an article record."""
     close = False

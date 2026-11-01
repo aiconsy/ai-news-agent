@@ -1,6 +1,7 @@
 """RSS feed fetching and parsing."""
 
 import calendar
+import html
 import json
 import logging
 import re
@@ -10,15 +11,18 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import feedparser
 
 from .config import FEEDS_PATH, MAX_ARTICLE_AGE_HOURS, MAX_ITEMS_PER_FEED, SOURCE_TIERS
+from .deepread import is_safe_fetch_url
 
 log = logging.getLogger("ai_news_agent")
 
 USER_AGENT = "Mozilla/5.0 (AI-News-Bot/1.0; +https://github.com/ai-news-agent)"
+MAX_FEED_BYTES = 2_000_000
+_TRACKING_PARAMS = {"fbclid", "gclid", "mc_cid", "mc_eid", "igshid"}
 
 
 def load_feeds(feeds_path: Path | None = None) -> list[dict]:
@@ -47,13 +51,45 @@ def load_feeds(feeds_path: Path | None = None) -> list[dict]:
 
 
 def classify_source_tier(source_name: str) -> int:
-    """Determine the quality tier of a news source (1=best, 3=default)."""
+    """Determine the quality tier of a news source (1=best, 3=default).
+
+    Match whole words. A substring check treated every name containing
+    "time" or "science" as that outlet.
+    """
     name_lower = source_name.lower()
     for tier, keywords in SOURCE_TIERS.items():
         for keyword in keywords:
-            if keyword in name_lower:
+            parts = [re.escape(part) for part in keyword.split()]
+            if re.search(r"(?<!\w)" + r"\s+".join(parts) + r"(?!\w)", name_lower):
                 return tier
     return 3
+
+
+def canonical_url(url: str) -> str:
+    """Drop fragments and tracking parameters so the same story shares one URL."""
+    raw = (url or "").strip()
+    try:
+        parsed = urlparse(raw)
+    except Exception:
+        return raw
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        return raw
+    query = [
+        (key, value)
+        for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+        if key.lower() not in _TRACKING_PARAMS and not key.lower().startswith("utm_")
+    ]
+    path = parsed.path.rstrip("/") or "/"
+    return urlunparse((parsed.scheme.lower(), parsed.netloc.lower(), path, "", urlencode(query), ""))
+
+
+class _SafeFeedRedirect(urllib.request.HTTPRedirectHandler):
+    """Refuse a feed redirect onto loopback, private, or metadata hosts."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not is_safe_fetch_url(newurl):
+            raise urllib.error.URLError(f"blocked redirect to {newurl}")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 def _fetch_raw(url: str, timeout: int = 15) -> bytes | None:
@@ -77,8 +113,16 @@ def _fetch_raw(url: str, timeout: int = 15) -> bytes | None:
         # tamper with feed responses and inject content into the briefing.
         context.check_hostname = True
         context.verify_mode = ssl.CERT_REQUIRED
-        with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
-            return resp.read()
+        opener = urllib.request.build_opener(
+            _SafeFeedRedirect,
+            urllib.request.HTTPSHandler(context=context),
+        )
+        with opener.open(req, timeout=timeout) as resp:
+            raw = resp.read(MAX_FEED_BYTES + 1)
+        if len(raw) > MAX_FEED_BYTES:
+            log.warning(f"Feed exceeded {MAX_FEED_BYTES} bytes, skipping: {url}")
+            return None
+        return raw
     except urllib.error.HTTPError as e:
         log.warning(f"HTTP {e.code} fetching {url}: {e.reason}")
     except urllib.error.URLError as e:
@@ -118,13 +162,14 @@ def fetch_feed(url: str, timeout: int = 15) -> list[dict]:
             continue
 
         # Strip HTML from summary
-        summary = re.sub(r"<[^>]+>", "", summary)[:500]
+        summary = re.sub(r"<[^>]+>", "", summary)
+        summary = re.sub(r"\s+", " ", html.unescape(summary)).strip()[:500]
         published_struct = entry.get("published_parsed") or entry.get("updated_parsed")
         published_ts = calendar.timegm(published_struct) if published_struct else None
 
         articles.append({
             "title": title,
-            "url": link,
+            "url": canonical_url(link),
             "summary": summary,
             "source": d.feed.get("title", url),
             "published": entry.get("published", entry.get("updated", "")),

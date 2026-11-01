@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 from datetime import datetime
 
 from .config import EDGE_TTS_BIN, OUTPUT_DIR, TTS_VOICE
@@ -106,12 +107,21 @@ def _tts_edge(text: str, output_path: str, voice: str) -> str | None:
     """Generate audio using Edge-TTS (fallback)."""
     mp3_path = output_path.replace(".ogg", ".mp3")
     try:
-        result = subprocess.run(
-            [EDGE_TTS_BIN, "--voice", voice, "--text", text, "--write-media", mp3_path],
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
+        # The script is long. Passing it as an argument shows it in the process
+        # list and can exceed the OS argument limit.
+        text_file = tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".txt", delete=False)
+        try:
+            text_file.write(text)
+            text_file.close()
+            result = subprocess.run(
+                [EDGE_TTS_BIN, "--voice", voice, "--file", text_file.name, "--write-media", mp3_path],
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+        finally:
+            if os.path.exists(text_file.name):
+                os.remove(text_file.name)
         if result.returncode != 0:
             log.error(f"edge-tts failed: {result.stderr[:500]}")
             return None
@@ -204,8 +214,15 @@ def _clean_text_for_tts(text: str) -> str:
     text = re.sub(r'^---+$', '', text, flags=re.MULTILINE)
     # Remove inline code
     text = re.sub(r'`([^`]+)`', r'\1', text)
-    # Fix abbreviations (U.S. → US, etc.)
-    text = re.sub(r'\b([A-Z])\.\s*', r'\1', text)
+    # Spoken initials. The old single-letter rule ate the space in "U.S. officials".
+    for pattern, spoken in (
+        (r"\bU\.S\.A\.", "USA"),
+        (r"\bU\.S\.", "US"),
+        (r"\bU\.K\.", "UK"),
+        (r"\bU\.N\.", "UN"),
+        (r"\bE\.U\.", "EU"),
+    ):
+        text = re.sub(pattern, spoken, text)
     # Collapse whitespace
     text = re.sub(r'\n{3,}', '\n\n', text)
     text = text.strip()

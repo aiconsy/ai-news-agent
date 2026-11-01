@@ -77,7 +77,7 @@ Fallback: OpenRouter (openrouter.ai/api/v1)
 2. **Exact hash**: SHA-256 of the normalized title, skipped if seen inside the window
 3. **Token overlap**: content-word Jaccard (default 0.72), not raw character similarity
 4. **Developing stories**: a short window (default 2h) so a real update can land
-5. **Refresh on sight**: seeing a headline again updates `seen_at`, so the window slides
+5. **Remembered after the briefing is saved**: a crash or a failed model call leaves the stories unseen so the next hour can retry them
 6. **Cleanup**: headlines older than 2× the dedup window are purged
 
 ## Token budget

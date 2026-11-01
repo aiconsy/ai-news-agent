@@ -62,11 +62,12 @@ IMPORTANT_KEYWORDS = {
         "regime change", "coup", "political crisis", "no-confidence",
         "market crash", "recession", "bank failure", "interest rate",
         "fed decision", "inflation crisis", "currency collapse",
-        "sovereign debt", "default", "bailout", "stimulus",
+        "sovereign debt", "debt default", "sovereign default", "bailout", "stimulus",
         "breakthrough", "landmark", "first-ever", "major discovery",
         "ai model", "quantum computing", "fusion energy", "semiconductor",
+        "nuclear weapon", "nuclear war", "nuclear threat", "nuclear test",
         "cyberattack", "ransomware", "zero-day", "data breach",
-        "pandemic", "epidemic", "outbreak", "vaccine", "fda approval",
+        "pandemic", "epidemic", "outbreak", "fda approval",
         "drug recall", "public health emergency",
     ],
     "medium": [
@@ -76,10 +77,11 @@ IMPORTANT_KEYWORDS = {
         "gdp", "merger", "acquisition", "earnings", "quarterly",
         "inflation", "deflation", "imf", "world bank",
         "artificial intelligence", "machine learning", "llm", "openai", "chatgpt",
-        "chip", "semiconductor", "startup", "funding round",
+        "semiconductor", "funding round",
         "data privacy", "blockchain",
         "climate", "emissions", "satellite", "rocket", "biotech", "genome",
-        "clinical trial", "ukraine", "gaza", "taiwan",
+        "clinical trial", "vaccine", "nuclear",
+        "ukraine", "gaza", "taiwan",
     ],
 }
 

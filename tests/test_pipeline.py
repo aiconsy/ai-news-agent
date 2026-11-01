@@ -15,10 +15,12 @@ from ai_news_agent.classify import (
 from ai_news_agent.config import SOURCE_TIERS
 from ai_news_agent.db import _get_conn, cleanup_old, mark_seen
 from ai_news_agent.dedup import _title_hash, cluster_articles, deduplicate_articles
-from ai_news_agent.deepread import deep_read_article, is_safe_fetch_url
+from ai_news_agent.deepread import deep_read_article, deep_read_articles, is_safe_fetch_url
 from ai_news_agent.deliver import _split_message
-from ai_news_agent.feeds import classify_source_tier, filter_fresh, load_feeds
+from ai_news_agent.feeds import canonical_url, classify_source_tier, filter_fresh, load_feeds
+from ai_news_agent.main import _wait_until
 from ai_news_agent.synthesize import build_synthesis_prompt
+from ai_news_agent.tts import _clean_text_for_tts
 
 
 def test_load_feeds():
@@ -278,6 +280,62 @@ def test_deep_read_does_not_follow_private_redirects(monkeypatch):
     monkeypatch.setattr("ai_news_agent.deepread.requests.get", fake_get)
     assert deep_read_article("https://news.example/story") is None
     assert calls == ["https://news.example/story"]
+
+
+def test_dedup_does_not_remember_stories_before_a_briefing(tmp_path, monkeypatch):
+    monkeypatch.setattr("ai_news_agent.db.DB_PATH", tmp_path / "news.db")
+    conn = _get_conn()
+    fresh = deduplicate_articles(
+        [{
+            "title": "Parliament passes a new privacy bill",
+            "url": "https://example.com/bill",
+            "tier": 1,
+            "summary": "Lawmakers voted after debate",
+        }],
+        conn,
+    )
+    assert len(fresh) == 1
+    assert conn.execute("SELECT COUNT(*) FROM headlines_seen").fetchone()[0] == 0
+    conn.close()
+
+
+def test_broad_words_are_not_automatic_high():
+    assert _keyword_classify("The app defaults to a new layout") is None
+    assert _keyword_classify("Seasonal flu vaccine clinics open") == "MEDIUM"
+    assert _keyword_classify("Officials warn of a nuclear weapon test") == "HIGH"
+
+
+def test_canonical_url_drops_tracking():
+    assert canonical_url("https://Example.com/a/?utm_source=rss&id=3#frag") == "https://example.com/a?id=3"
+
+
+def test_source_tier_does_not_match_inside_a_name():
+    assert classify_source_tier("ScienceDaily") == 3
+    assert classify_source_tier("BBC News") == 1
+
+
+def test_tts_keeps_the_space_after_initials():
+    spoken = _clean_text_for_tts("U.S. officials met the U.K. envoy.")
+    assert spoken == "US officials met the UK envoy."
+
+
+def test_deep_read_skips_a_long_rss_deck(monkeypatch):
+    def boom(url, timeout=20):
+        raise AssertionError(url)
+
+    monkeypatch.setattr("ai_news_agent.deepread.deep_read_article", boom)
+    articles = [{
+        "title": "Long deck",
+        "url": "https://example.com/long",
+        "priority": "HIGH",
+        "summary": "x" * 240,
+    }]
+    deep_read_articles(articles, max_articles=5)
+    assert "deep_read" not in articles[0]
+
+
+def test_bad_deliver_at_does_not_wait():
+    assert _wait_until("25:99") is False
 
 
 def test_split_message_hard_cuts_a_long_paragraph():

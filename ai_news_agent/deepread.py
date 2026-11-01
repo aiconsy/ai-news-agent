@@ -137,6 +137,12 @@ def deep_read_article(url: str, timeout: int = 20) -> dict | None:
     return None
 
 
+def _summary_is_enough(article: dict) -> bool:
+    """A long RSS deck is already a lead. Fetching the page rarely adds facts."""
+    summary = re.sub(r"\s+", " ", article.get("summary") or "").strip()
+    return len(summary) >= 240
+
+
 def _read_one(article: dict) -> tuple[dict, dict | None]:
     return article, deep_read_article(article.get("url", ""))
 
@@ -151,7 +157,9 @@ def deep_read_articles(articles: list[dict], max_articles: int = 0) -> list[dict
     targets = [
         article
         for article in articles
-        if article.get("url") and article.get("priority") in ("HIGH", "MEDIUM")
+        if article.get("url")
+        and article.get("priority") in ("HIGH", "MEDIUM")
+        and not _summary_is_enough(article)
     ][:max_articles]
     if not targets:
         return articles

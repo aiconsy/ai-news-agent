@@ -12,7 +12,7 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 
 from .config import DEDUP_HOURS, DEDUP_THRESHOLD, DEVELOPING_WINDOW_HOURS
-from .db import _get_conn, _title_hash, mark_seen
+from .db import _get_conn, _title_hash
 
 log = logging.getLogger("ai_news_agent")
 
@@ -73,8 +73,8 @@ def _is_developing(title: str, summary: str = "") -> bool:
 def cluster_articles(articles: list[dict]) -> tuple[list[dict], list[dict]]:
     """Collapse same-run copies of one story. Keep the best source.
 
-    Returns (kept, suppressed). Suppressed items should still be marked seen
-    so a later run does not revive the copy that was thrown away.
+    Returns (kept, suppressed). Callers remember the kept titles only after
+    a briefing is actually saved, so a failed run can try those stories again.
     """
     ranked = sorted(
         articles,
@@ -105,15 +105,6 @@ def deduplicate_articles(articles: list[dict], conn: sqlite3.Connection | None =
 
     try:
         kept, suppressed = cluster_articles(articles)
-        for article in suppressed:
-            mark_seen(
-                title=article.get("title", ""),
-                url=article.get("url", ""),
-                category=article.get("category", ""),
-                priority=article.get("priority", "MEDIUM"),
-                conn=conn,
-            )
-
         now = datetime.now(timezone.utc)
         static_cutoff = now - timedelta(hours=DEDUP_HOURS)
         developing_cutoff = now - timedelta(hours=DEVELOPING_WINDOW_HOURS)
@@ -161,13 +152,6 @@ def deduplicate_articles(articles: list[dict], conn: sqlite3.Connection | None =
             seen_stamp = now.isoformat()
             recent_hashes[url_hash] = seen_stamp
             recent_tokens.append((tokens, seen_stamp))
-            mark_seen(
-                title=title,
-                url=article.get("url", ""),
-                category=article.get("category", ""),
-                priority=article.get("priority", "MEDIUM"),
-                conn=conn,
-            )
 
         log.info(
             "Dedup: %d → %d articles (clustered out: %d, new: %d, developing: %d, "
