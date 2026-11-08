@@ -101,6 +101,6 @@ SQLite with three tables:
 
 ## Scheduling
 
-Run hourly via:
-- **Hermes cron**: `hermes cron create --name "News" --schedule "0 * * * *"`
-- **crontab**: `0 * * * * /path/to/scripts/run_hourly.sh`
+Run hourly via crontab: `0 * * * * /path/to/scripts/run_hourly.sh`
+
+Hostinger managed agents install the repository as an addon. `SKILL.md` at the repository root is the manifest OpenClaw and Hermes read. Do not deploy the repository as a Node.js or static website.

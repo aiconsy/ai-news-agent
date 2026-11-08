@@ -6,6 +6,7 @@ until target time.
 
 import argparse
 import logging
+import shutil
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -15,11 +16,15 @@ from pathlib import Path
 from . import __version__
 from .classify import classify_articles
 from .config import (
+    FEEDS_PATH,
+    LLM_API_KEY,
     LOG_DIR,
     MODEL_SYNTHESIS,
     OUTPUT_DIR,
     QUIET_HOUR_END,
     QUIET_HOUR_START,
+    TELEGRAM_BOT_TOKEN,
+    TELEGRAM_CHAT_ID,
     ensure_runtime_dirs,
 )
 from .db import _get_conn, cleanup_old, mark_seen_many, save_briefing
@@ -257,11 +262,47 @@ def run_pipeline(
         conn.close()
 
 
+def doctor() -> int:
+    """Report whether this install can run. Never prints secret values."""
+    print(f"ai-news-agent {__version__}")
+    print(f"python: {sys.version.split()[0]}")
+    print(f"feeds: {FEEDS_PATH}")
+    feeds = load_feeds()
+    print(f"feed_count: {len(feeds)}")
+    problems: list[str] = []
+    if not feeds:
+        problems.append("feed list is missing or empty")
+    flags = (
+        ("LLM_API_KEY", bool(LLM_API_KEY)),
+        ("TELEGRAM_BOT_TOKEN", bool(TELEGRAM_BOT_TOKEN)),
+        ("TELEGRAM_CHAT_ID", bool(TELEGRAM_CHAT_ID)),
+    )
+    for name, present in flags:
+        print(f"{name}: {'set' if present else 'missing'}")
+    for tool in ("ffmpeg", "edge-tts"):
+        found = shutil.which(tool)
+        print(f"{tool}: {found or 'missing'}")
+    if not shutil.which("ffmpeg"):
+        print("note: audio delivery needs ffmpeg; text briefings still work with --text-only")
+    if problems:
+        print("status: not_ready")
+        for problem in problems:
+            print(f"problem: {problem}")
+        return 1
+    print("status: ready")
+    return 0
+
+
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(description="AI News Agent — Hourly news intelligence pipeline")
-    parser.add_argument("command", nargs="?", default="run", choices=["run", "fetch", "version"],
-                        help="Command to run (default: run)")
+    parser.add_argument(
+        "command",
+        nargs="?",
+        default="run",
+        choices=["run", "fetch", "version", "doctor"],
+        help="Command to run (default: run)",
+    )
     parser.add_argument(
         "--force",
         action="store_true",
@@ -296,6 +337,9 @@ def main():
     if args.command == "version":
         print(f"ai-news-agent v{__version__}")
         return
+
+    if args.command == "doctor":
+        raise SystemExit(doctor())
 
     if args.command == "fetch":
         feeds = load_feeds()

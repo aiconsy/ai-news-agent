@@ -92,15 +92,23 @@ ai-news run --force
 ai-news run --no-deliver
 ```
 
-### Automate (Hermes Agent)
+### Check the install
 
 ```bash
-hermes cron create \
-  --name "Hourly News Briefing" \
-  --schedule "0 * * * *" \
-  --prompt "Run the news briefing: cd ~/ai-news-agent && python -m ai_news_agent.main" \
-  --deliver telegram
+ai-news doctor
 ```
+
+`doctor` prints whether the feed list, model key, and Telegram settings are present. It does not print secret values.
+
+### Automate
+
+On Hostinger Managed OpenClaw or Hermes, install this repository as an agent addon. `SKILL.md` is at the repository root:
+
+```bash
+openclaw skills install git:aiconsy/ai-news-agent
+```
+
+Hermes can install the same repository from GitHub. The agent then follows `SKILL.md`. Do not deploy this repo as a Node.js or static website.
 
 Or add to crontab:
 ```
@@ -167,34 +175,26 @@ ai-news-agent/
 │   └── test_pipeline.py     # Unit tests + redaction guards
 ├── docs/
 │   └── architecture.md      # Detailed architecture docs
+├── SKILL.md                 # Agent addon manifest (OpenClaw and Hermes)
 ├── .env.example             # Configuration template
 ├── pyproject.toml           # Package definition
 └── requirements.txt          # Python dependencies
 ```
 
-## 🔌 Using as a Plugin
+## 🔌 Using as an addon
 
-### Hermes Agent
-```yaml
-# In ~/.hermes/config.yaml
-skills:
-  - ai-news-agent
+Hostinger managed agents install this repository as a skill. `SKILL.md` is at the root, which is what OpenClaw and Hermes require.
+
+```bash
+openclaw skills install git:aiconsy/ai-news-agent
 ```
 
-### OpenClaw
-```json
-{
-  "plugins": [{
-    "name": "ai-news-agent",
-    "command": "python -m ai_news_agent.main"
-  }]
-}
-```
+Then ask the agent for a news briefing. It should run `ai-news doctor` before the first live send.
 
 ### Standalone
 ```bash
-# Just run it — no agent needed
-python -m ai_news_agent.main
+python3 -m ai_news_agent.main doctor
+python3 -m ai_news_agent.main run --text-only --no-deliver
 ```
 
 ## 🎨 Adding Custom Feeds

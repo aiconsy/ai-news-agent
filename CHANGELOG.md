@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Shipped as an agent addon. `SKILL.md` is at the repository root for OpenClaw and Hermes installs, including Hostinger managed agents.
+- Added `ai-news doctor`, which checks the install and reports which settings are present without printing secrets.
+
 ## 1.2.0
 
 - Headlines are remembered only after a briefing is saved. A failed model call no longer drops those stories.

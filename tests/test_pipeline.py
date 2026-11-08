@@ -18,7 +18,7 @@ from ai_news_agent.dedup import _title_hash, cluster_articles, deduplicate_artic
 from ai_news_agent.deepread import deep_read_article, deep_read_articles, is_safe_fetch_url
 from ai_news_agent.deliver import _split_message
 from ai_news_agent.feeds import canonical_url, classify_source_tier, filter_fresh, load_feeds
-from ai_news_agent.main import _wait_until
+from ai_news_agent.main import _wait_until, doctor
 from ai_news_agent.synthesize import build_synthesis_prompt
 from ai_news_agent.tts import _clean_text_for_tts
 
@@ -339,6 +339,26 @@ def test_deep_read_skips_a_long_rss_deck(monkeypatch):
     }]
     deep_read_articles(articles, max_articles=5)
     assert "deep_read" not in articles[0]
+
+
+def test_doctor_hides_secrets(capsys, monkeypatch):
+    monkeypatch.setattr("ai_news_agent.main.TELEGRAM_BOT_TOKEN", "secret-token-value")
+    monkeypatch.setattr("ai_news_agent.main.TELEGRAM_CHAT_ID", "")
+    monkeypatch.setattr("ai_news_agent.main.LLM_API_KEY", "")
+    assert doctor() == 0
+    report = capsys.readouterr().out
+    assert "status: ready" in report
+    assert "TELEGRAM_BOT_TOKEN: set" in report
+    assert "secret-token-value" not in report
+    assert "feed_count:" in report
+
+
+def test_skill_manifest_is_at_the_repo_root():
+    text = (Path(__file__).parent.parent / "SKILL.md").read_text()
+    assert text.startswith("---\n")
+    assert "name: ai-news-agent\n" in text
+    assert "description:" in text
+    assert "version: 1.3.0\n" in text
 
 
 def test_bad_deliver_at_does_not_wait():
